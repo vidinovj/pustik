@@ -31,6 +31,6 @@
         </div>
     @endif
 
-    <a href="{{ route('admin.kebijakan-kemlu.index') }}" class="btn btn-secondary">Kembali</a>
+    <a href="{{ route('admin.kebijakan-kemlu.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">Kembali</a>
 </div>
 @endsection
