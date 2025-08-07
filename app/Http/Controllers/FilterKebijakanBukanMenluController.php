@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\KebijakanNonKemlu;
+use App\Models\KebijakanTikNonKemlu;
 use Illuminate\Http\Request;
 
 class FilterKebijakanBukanMenluController extends Controller
@@ -19,7 +19,7 @@ class FilterKebijakanBukanMenluController extends Controller
         $filters = $request->only(['jenis_kebijakan', 'nomor_kebijakan', 'tahun_penerbitan_min', 'tahun_penerbitan_max', 'perihal_kebijakan', 'instansi', 'sort_by', 'sort_order']);
 
         // Build query with filters
-        $query = KebijakanNonKemlu::query();
+        $query = KebijakanTikNonKemlu::query();
 
         if (!empty($filters['jenis_kebijakan'])) {
             $query->where('jenis_kebijakan', 'like', '%' . $filters['jenis_kebijakan'] . '%');
@@ -33,8 +33,8 @@ class FilterKebijakanBukanMenluController extends Controller
         if (!empty($filters['tahun_penerbitan_max'])) {
             $query->where('tahun_penerbitan', '<=', $filters['tahun_penerbitan_max']);
         }
-        if (!empty($filters['perihal_kebijakan'])) {
-            $query->where('perihal_kebijakan', 'like', '%' . $filters['perihal_kebijakan'] . '%');
+        if (!empty($filters['perihal'])) {
+            $query->where('perihal', 'like', '%' . $filters['perihal'] . '%');
         }
         if (!empty($filters['instansi'])) {
             $query->where('instansi', 'like', '%' . $filters['instansi'] . '%');

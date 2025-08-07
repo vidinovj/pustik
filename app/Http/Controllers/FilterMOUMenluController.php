@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\NotaMOU;
+use App\Models\NotaKesepahaman;
 use Illuminate\Http\Request;
 
 class FilterMOUMenluController extends Controller
 {
     public function index(Request $request)
     {
-        $query = NotaMOU::query();
+        $query = NotaKesepahaman::query();
 
         // Filter berdasarkan jenis dokumen
         if ($request->filled('jenis_dokumen')) {

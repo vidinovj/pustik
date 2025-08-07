@@ -26,10 +26,9 @@
                     <input type="number" id="tahun_penerbitan_max" name="tahun_penerbitan_max" value="{{ request('tahun_penerbitan_max') }}" placeholder="Max Tahun Penerbitan" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200">
                 </div>
 
-                <div>
-                    <label for="perihal_kebijakan" class="block text-sm font-medium text-gray-700 mb-1">Perihal Kebijakan</label>
-                    <input type="text" id="perihal_kebijakan" name="perihal_kebijakan" value="{{ request('perihal_kebijakan') }}" placeholder="Perihal Kebijakan" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200">
-                </div>
+                                    <label for="perihal" class="block text-sm font-medium text-gray-700 mb-1">Perihal</label>
+                    <input type="text" id="perihal" name="perihal" value="{{ request('perihal') }}" placeholder="Perihal" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200">
+
 
                 <div>
                     <label for="instansi" class="block text-sm font-medium text-gray-700 mb-1">Instansi</label>
@@ -69,7 +68,7 @@
                         <th class="py-3 px-4">Jenis Kebijakan</th>
                         <th class="py-3 px-4">Nomor Kebijakan</th>
                         <th class="py-3 px-4">Tahun Penerbitan</th>
-                        <th class="py-3 px-4">Perihal Kebijakan</th>
+                        <th class="py-3 px-4">Perihal</th>
                         <th class="py-3 px-4">Instansi</th>
                         <th class="py-3 px-4">Tautan</th>
                     </tr>
@@ -80,7 +79,7 @@
                             <td class="py-3 px-4">{{ $item->jenis_kebijakan }}</td>
                             <td class="py-3 px-4">{{ $item->nomor_kebijakan }}</td>
                             <td class="py-3 px-4">{{ $item->tahun_penerbitan }}</td>
-                            <td class="py-3 px-4">{{ $item->perihal_kebijakan }}</td>
+                            <td class="py-3 px-4">{{ $item->perihal }}</td>
                             <td class="py-3 px-4">{{ $item->instansi }}</td>
                             <td class="py-3 px-4">
                                 @if ($item->tautan)
