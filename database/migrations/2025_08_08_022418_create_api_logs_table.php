@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('api_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('source_id')->constrained('document_sources')->onDelete('cascade');
+            $table->foreignId('document_source_id')->constrained('document_sources')->onDelete('cascade');
             $table->string('endpoint');
             $table->string('request_method', 10);
             $table->integer('response_status');
