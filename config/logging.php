@@ -127,6 +127,30 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'legal-documents' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/legal-documents.log'),
+            'level' => env('LEGAL_DOCS_LOG_LEVEL', 'info'),
+            'days' => 14,
+            'replace_placeholders' => true,
+        ],
+
+        'legal-documents-api' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/legal-documents-api.log'),
+            'level' => env('LEGAL_DOCS_LOG_LEVEL', 'info'),
+            'days' => 7,
+            'replace_placeholders' => true,
+        ],
+
+        'legal-documents-errors' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/legal-documents-errors.log'),
+            'level' => 'error',
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];
