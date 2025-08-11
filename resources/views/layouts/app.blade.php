@@ -19,17 +19,9 @@
                    class="block px-4 py-2 text-gray-600 hover:bg-blue-500 hover:text-white {{ request()->routeIs('admin.dashboard') ? 'bg-blue-500 text-white' : '' }}">
                     Dashboard
                 </a>
-                <a href="{{ route('admin.kebijakan-kemlu.index') }}" 
-                   class="block px-4 py-2 text-gray-600 hover:bg-blue-500 hover:text-white {{ request()->routeIs('admin.kebijakan-kemlu.*') ? 'bg-blue-500 text-white' : '' }}">
-                    Kebijakan TIK Kemlu
-                </a>
-                <a href="{{ route('admin.kebijakan-non-kemlu.index') }}" 
-                   class="block px-4 py-2 text-gray-600 hover:bg-blue-500 hover:text-white {{ request()->routeIs('admin.kebijakan-non-kemlu.*') ? 'bg-blue-500 text-white' : '' }}">
-                    Kebijakan TIK Non-Kemlu
-                </a>
-                <a href="{{ route('admin.nota-kesepahaman.index') }}" 
-                   class="block px-4 py-2 text-gray-600 hover:bg-blue-500 hover:text-white {{ request()->routeIs('admin.nota-kesepahaman.*') ? 'bg-blue-500 text-white' : '' }}">
-                    Nota Kesepahaman
+                <a href="{{ route('admin.legal-documents.index') }}" 
+                   class="block px-4 py-2 text-gray-600 hover:bg-blue-500 hover:text-white {{ request()->routeIs('admin.legal-documents.*') ? 'bg-blue-500 text-white' : '' }}">
+                    Legal Documents
                 </a>
                 <form method="POST" action="{{ route('logout') }}" class="block px-4 py-2">
                     @csrf
