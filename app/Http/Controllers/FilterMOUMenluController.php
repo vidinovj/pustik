@@ -2,38 +2,41 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\NotaKesepahaman;
+use App\Models\LegalDocument;
 use Illuminate\Http\Request;
 
 class FilterMOUMenluController extends Controller
 {
     public function index(Request $request)
     {
-        $query = NotaKesepahaman::query();
+        $query = LegalDocument::whereIn('document_type', ['Nota Kesepahaman - MOU', 'Nota Kesepahaman - PKS']);
 
         // Filter berdasarkan jenis dokumen
         if ($request->filled('jenis_dokumen')) {
-            $query->where('jenis_dokumen', 'like', '%' . $request->jenis_dokumen . '%');
+            $query->where('document_type', 'like', '%' . $request->jenis_dokumen . '%');
         }
 
         // Filter berdasarkan perihal dokumen
         if ($request->filled('perihal_dokumen')) {
-            $query->where('perihal_dokumen', 'like', '%' . $request->perihal_dokumen . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->perihal_dokumen . '%')
+                  ->orWhere('full_text', 'like', '%' . $request->perihal_dokumen . '%');
+            });
         }
 
         // Filter berdasarkan satker kemlu terkait
         if ($request->filled('satker_kemlu_terkait')) {
-            $query->where('satker_kemlu_terkait', 'like', '%' . $request->satker_kemlu_terkait . '%');
+            $query->where('metadata->satker_kemlu_terkait', 'like', '%' . $request->satker_kemlu_terkait . '%');
         }
 
         // Filter berdasarkan K/L/I external terkait
         if ($request->filled('kl_external_terkait')) {
-            $query->where('kl_external_terkait', 'like', '%' . $request->kl_external_terkait . '%');
+            $query->where('metadata->kl_external_terkait', 'like', '%' . $request->kl_external_terkait . '%');
         }
 
         // Filter berdasarkan rentang tanggal disahkan
         if ($request->filled('start_date_disahkan') && $request->filled('end_date_disahkan')) {
-            $query->whereBetween('tanggal_disahkan', [
+            $query->whereBetween('issue_date', [
                 $request->start_date_disahkan,
                 $request->end_date_disahkan
             ]);
@@ -41,7 +44,7 @@ class FilterMOUMenluController extends Controller
 
         // Filter berdasarkan rentang tanggal berakhir
         if ($request->filled('start_date_berakhir') && $request->filled('end_date_berakhir')) {
-            $query->whereBetween('tanggal_berakhir', [
+            $query->whereBetween('metadata->tanggal_berakhir', [
                 $request->start_date_berakhir,
                 $request->end_date_berakhir
             ]);
@@ -51,16 +54,16 @@ class FilterMOUMenluController extends Controller
         if ($request->filled('sort_by')) {
             switch ($request->sort_by) {
                 case 'tanggal_disahkan_asc':
-                    $query->orderBy('tanggal_disahkan', 'asc');
+                    $query->orderBy('issue_date', 'asc');
                     break;
                 case 'tanggal_disahkan_desc':
-                    $query->orderBy('tanggal_disahkan', 'desc');
+                    $query->orderBy('issue_date', 'desc');
                     break;
                 case 'tanggal_berakhir_asc':
-                    $query->orderBy('tanggal_berakhir', 'asc');
+                    $query->orderBy('metadata->tanggal_berakhir', 'asc');
                     break;
                 case 'tanggal_berakhir_desc':
-                    $query->orderBy('tanggal_berakhir', 'desc');
+                    $query->orderBy('metadata->tanggal_berakhir', 'desc');
                     break;
             }
         }

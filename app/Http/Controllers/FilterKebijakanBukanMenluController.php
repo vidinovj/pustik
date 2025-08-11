@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\KebijakanTikNonKemlu;
+use App\Models\LegalDocument;
 use Illuminate\Http\Request;
 
 class FilterKebijakanBukanMenluController extends Controller
@@ -19,25 +19,29 @@ class FilterKebijakanBukanMenluController extends Controller
         $filters = $request->only(['jenis_kebijakan', 'nomor_kebijakan', 'tahun_penerbitan_min', 'tahun_penerbitan_max', 'perihal_kebijakan', 'instansi', 'sort_by', 'sort_order']);
 
         // Build query with filters
-        $query = KebijakanTikNonKemlu::query();
+        $query = LegalDocument::where('document_type', 'Kebijakan TIK Non Kemlu');
 
         if (!empty($filters['jenis_kebijakan'])) {
-            $query->where('jenis_kebijakan', 'like', '%' . $filters['jenis_kebijakan'] . '%');
+            // This filter is now handled by the initial where clause on document_type
+            // If you need to filter by original jenis_kebijakan, you'd query metadata JSON
         }
         if (!empty($filters['nomor_kebijakan'])) {
-            $query->where('nomor_kebijakan', 'like', '%' . $filters['nomor_kebijakan'] . '%');
+            $query->where('document_number', 'like', '%' . $filters['nomor_kebijakan'] . '%');
         }
         if (!empty($filters['tahun_penerbitan_min'])) {
-            $query->where('tahun_penerbitan', '>=', $filters['tahun_penerbitan_min']);
+            $query->whereYear('issue_date', '>=', $filters['tahun_penerbitan_min']);
         }
         if (!empty($filters['tahun_penerbitan_max'])) {
-            $query->where('tahun_penerbitan', '<=', $filters['tahun_penerbitan_max']);
+            $query->whereYear('issue_date', '<=', $filters['tahun_penerbitan_max']);
         }
-        if (!empty($filters['perihal'])) {
-            $query->where('perihal', 'like', '%' . $filters['perihal'] . '%');
+        if (!empty($filters['perihal_kebijakan'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('title', 'like', '%' . $filters['perihal_kebijakan'] . '%')
+                  ->orWhere('full_text', 'like', '%' . $filters['perihal_kebijakan'] . '%');
+            });
         }
         if (!empty($filters['instansi'])) {
-            $query->where('instansi', 'like', '%' . $filters['instansi'] . '%');
+            $query->where('metadata->agency', 'like', '%' . $filters['instansi'] . '%');
         }
 
         // Apply sorting if specified

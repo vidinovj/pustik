@@ -3,9 +3,6 @@
 use App\Http\Controllers\ProfileController;
 
 use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\KebijakanTikKemluController;
-use App\Http\Controllers\Admin\KebijakanTikNonKemluController;
-use App\Http\Controllers\Admin\NotaKesepahamanController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FilterKebijakanMenluController;
 use App\Http\Controllers\FilterKebijakanBukanMenluController;
@@ -38,15 +35,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     // Dashboard admin
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // CRUD Kebijakan TIK Kemlu
-    Route::resource('kebijakan-kemlu', KebijakanTikKemluController::class);
-    
-    // CRUD Kebijakan TIK Non-Kemlu
-    Route::resource('kebijakan-non-kemlu', KebijakanTikNonKemluController::class);
-    
-    // CRUD Nota Kesepahaman
-    Route::resource('nota-kesepahaman', NotaKesepahamanController::class);
-});
+    });
 
 
 // Rute untuk profil pengguna

@@ -3,9 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\KebijakanTikKemlu;
-use App\Models\KebijakanTikNonKemlu;
-use App\Models\NotaKesepahaman;
+use App\Models\LegalDocument;
 
 class DashboardController extends Controller
 {
@@ -13,9 +11,9 @@ class DashboardController extends Controller
     {
         $data = [
             'title' => 'Dashboard Admin',
-            'total_kebijakan_kemlu' => KebijakanTikKemlu::count(),
-            'total_kebijakan_non_kemlu' => KebijakanTikNonKemlu::count(),
-            'total_nota_kesepahaman' => NotaKesepahaman::count(),
+            'total_kebijakan_kemlu' => LegalDocument::where('document_type', 'Kebijakan TIK Kemlu')->count(),
+            'total_kebijakan_non_kemlu' => LegalDocument::where('document_type', 'Kebijakan TIK Non Kemlu')->count(),
+            'total_nota_kesepahaman' => LegalDocument::where('document_type', 'Nota Kesepahaman')->count(),
         ];
 
         return view('dashboard', $data);
