@@ -104,9 +104,9 @@ class DocumentSourcesSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'kominfo_jdih',
+                'name' => 'komdigi_jdih',
                 'type' => 'web_scraping',
-                'base_url' => 'https://jdih.kominfo.go.id',
+                'base_url' => 'https://jdih.komdigi.go.id',
                 'description' => 'JDIH Kementerian Komunikasi dan Digital',
                 'is_active' => false, // Disabled due to DNS issues
                 'config' => [

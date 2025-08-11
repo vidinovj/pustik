@@ -73,14 +73,28 @@ class LegalDocumentServiceProvider extends ServiceProvider
         Http::macro('legalDocsScraper', function () {
             $httpConfig = config('legal_documents.http_client');
             
+            // Rotate User-Agent if enabled
+            $userAgent = $httpConfig['user_agent'];
+            if (!empty($httpConfig['user_agents']) && $httpConfig['anti_detection']['rotate_user_agents']) {
+                $userAgent = $httpConfig['user_agents'][array_rand($httpConfig['user_agents'])];
+            }
+            
             return Http::withHeaders([
-                    'User-Agent' => $httpConfig['user_agent'],
-                    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                    'Accept-Language' => 'id-ID,id;q=0.9,en;q=0.8',
+                    'User-Agent' => $userAgent,
+                    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                    'Accept-Language' => 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
                     'Accept-Encoding' => 'gzip, deflate, br',
+                    'Cache-Control' => 'max-age=0',
                     'DNT' => '1',
                     'Connection' => 'keep-alive',
                     'Upgrade-Insecure-Requests' => '1',
+                    'Sec-Fetch-Dest' => 'document',
+                    'Sec-Fetch-Mode' => 'navigate',
+                    'Sec-Fetch-Site' => 'none',
+                    'Sec-Fetch-User' => '?1',
+                    'Sec-Ch-Ua' => '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+                    'Sec-Ch-Ua-Mobile' => '?0',
+                    'Sec-Ch-Ua-Platform' => '"macOS"',
                 ])
                 ->timeout($httpConfig['read_timeout'])
                 ->connectTimeout($httpConfig['connect_timeout'])
@@ -90,10 +104,43 @@ class LegalDocumentServiceProvider extends ServiceProvider
                         'max' => $httpConfig['max_redirects'],
                         'strict' => false,
                         'referer' => true,
+                        'track_redirects' => true,
                         'protocols' => ['http', 'https'],
                     ],
+                    'cookies' => true, // Enable cookie jar
                 ]);
         });
+
+        Http::macro('sessionAwareScraper', function () {
+            $httpConfig = config('legal_documents.http_client');
+            
+            return Http::withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                    'Accept-Language' => 'id-ID,id;q=0.9,en;q=0.8',
+                    'Accept-Encoding' => 'gzip, deflate, br',
+                    'Cache-Control' => 'no-cache',
+                    'Pragma' => 'no-cache',
+                    'DNT' => '1',
+                    'Connection' => 'keep-alive',
+                    'Upgrade-Insecure-Requests' => '1',
+                ])
+                ->timeout(60)
+                ->connectTimeout(15)
+                ->withOptions([
+                    'verify' => $httpConfig['verify_ssl'],
+                    'allow_redirects' => [
+                        'max' => 10,
+                        'strict' => false,
+                        'referer' => true,
+                        'track_redirects' => true,
+                        'protocols' => ['http', 'https'],
+                    ],
+                    'cookies' => true,
+                    'http_errors' => false, // Don't throw on 4xx/5xx
+                ]);
+        });
+
 
         // URL monitoring client macro
         Http::macro('urlChecker', function () {

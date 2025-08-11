@@ -16,7 +16,7 @@ class ScraperFactory
         'jdih_perpusnas_api' => JdihPerpusnasApiScraper::class,
         'jdihn' => JdihnScraper::class,
         'bpk_jdih' => BpkJdihScraper::class,
-        'kominfo_jdih' => KominfoJdihScraper::class,
+        'komdigi_jdih' => KomdigiJdihScraper::class,
     ];
 
     /**
@@ -82,72 +82,5 @@ class ScraperFactory
         return DocumentSource::active()
             ->whereIn('name', array_keys(static::$scrapers))
             ->get();
-    }
-}
-
-// Placeholder classes for other scrapers (implement these later)
-class JdihnScraper extends BaseScraper
-{
-    public function scrape(): array
-    {
-        // TODO: Implement JDIHN scraper
-        Log::channel('legal-documents')->info("JDIHN scraper not yet implemented");
-        return [];
-    }
-
-    protected function extractDocumentData(\DOMDocument $dom, string $url): ?array
-    {
-        // TODO: Implement JDIHN data extraction
-        return null;
-    }
-
-    protected function getDocumentUrls(): array
-    {
-        // TODO: Implement JDIHN URL discovery
-        return [];
-    }
-}
-
-class BpkJdihScraper extends BaseScraper
-{
-    public function scrape(): array
-    {
-        // TODO: Implement BPK JDIH scraper
-        Log::channel('legal-documents')->info("BPK JDIH scraper not yet implemented");
-        return [];
-    }
-
-    protected function extractDocumentData(\DOMDocument $dom, string $url): ?array
-    {
-        // TODO: Implement BPK data extraction
-        return null;
-    }
-
-    protected function getDocumentUrls(): array
-    {
-        // TODO: Implement BPK URL discovery
-        return [];
-    }
-}
-
-class KominfoJdihScraper extends BaseScraper
-{
-    public function scrape(): array
-    {
-        // TODO: Implement Kominfo JDIH scraper
-        Log::channel('legal-documents')->info("Kominfo JDIH scraper not yet implemented");
-        return [];
-    }
-
-    protected function extractDocumentData(\DOMDocument $dom, string $url): ?array
-    {
-        // TODO: Implement Kominfo data extraction
-        return null;
-    }
-
-    protected function getDocumentUrls(): array
-    {
-        // TODO: Implement Kominfo URL discovery
-        return [];
     }
 }

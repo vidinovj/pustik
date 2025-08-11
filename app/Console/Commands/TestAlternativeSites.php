@@ -18,7 +18,7 @@ class TestAlternativeSites extends Command
         $sites = [
             'JDIHN (National)' => 'https://jdihn.go.id',
             'BPK JDIH' => 'https://peraturan.bpk.go.id', 
-            'Kominfo JDIH' => 'https://jdih.kominfo.go.id',
+            'Komdigi JDIH' => 'https://jdih.komdigi.go.id',
             'JDIH Nasional' => 'https://peraturan.go.id',
             'Kemenkomdigi' => 'https://jdih.komdigi.go.id',
             'BSSN' => 'https://www.bssn.go.id',

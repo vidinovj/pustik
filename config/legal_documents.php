@@ -54,12 +54,34 @@ return [
     */
 
     'http_client' => [
-        'user_agent' => env('LEGAL_DOCS_USER_AGENT', 'Laravel Legal Documents Platform/1.0'),
+        // More realistic User-Agent that rotates
+        'user_agents' => [
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+        ],
+        'user_agent' => env('LEGAL_DOCS_USER_AGENT', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'),
         'verify_ssl' => env('LEGAL_DOCS_VERIFY_SSL', true),
-        'connect_timeout' => env('LEGAL_DOCS_CONNECT_TIMEOUT', 10),
-        'read_timeout' => env('LEGAL_DOCS_READ_TIMEOUT', 30),
+        'connect_timeout' => env('LEGAL_DOCS_CONNECT_TIMEOUT', 15),
+        'read_timeout' => env('LEGAL_DOCS_READ_TIMEOUT', 45),
         'follow_redirects' => env('LEGAL_DOCS_FOLLOW_REDIRECTS', true),
-        'max_redirects' => env('LEGAL_DOCS_MAX_REDIRECTS', 5),
+        'max_redirects' => env('LEGAL_DOCS_MAX_REDIRECTS', 10),
+        
+        // Enhanced browser simulation
+        'browser_simulation' => [
+            'enabled' => env('LEGAL_DOCS_BROWSER_SIMULATION', true),
+            'session_persistence' => env('LEGAL_DOCS_SESSION_PERSISTENCE', true),
+            'javascript_delay' => env('LEGAL_DOCS_JS_DELAY', 2), // seconds to wait for JS
+        ],
+        
+        // Anti-detection measures
+        'anti_detection' => [
+            'random_delays' => env('LEGAL_DOCS_RANDOM_DELAYS', true),
+            'min_delay' => env('LEGAL_DOCS_MIN_DELAY', 1),
+            'max_delay' => env('LEGAL_DOCS_MAX_DELAY', 5),
+            'rotate_user_agents' => env('LEGAL_DOCS_ROTATE_UA', true),
+        ],
     ],
 
     /*
