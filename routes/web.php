@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\LegalDocumentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FilterKebijakanMenluController;
 use App\Http\Controllers\FilterKebijakanBukanMenluController;
@@ -34,6 +35,9 @@ Route::get('/ktbk', [FilterKebijakanMenluController::class, 'index'])->name('ktb
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard admin
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // CRUD Legal Documents
+    Route::resource('legal-documents', LegalDocumentController::class);
 
     });
 

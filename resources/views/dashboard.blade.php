@@ -25,6 +25,11 @@
                     <p class="text-gray-600">Dokumen kerja sama dan nota kesepahaman dengan berbagai instansi.</p>
                     <a href="{{ route('nkmdp') }}" class="mt-4 inline-block text-purple-600 hover:text-purple-800">Lihat detail →</a>
                 </div>
+                <div class="bg-yellow-50 p-4 rounded-lg">
+                    <h2 class="text-xl font-semibold text-yellow-800 mb-2">Manage Legal Documents</h2>
+                    <p class="text-gray-600">Manage all legal documents (Kebijakan TIK Kemlu, Non Kemlu, MoU/PKS).</p>
+                    <a href="{{ route('admin.legal-documents.index') }}" class="mt-4 inline-block text-yellow-600 hover:text-yellow-800">Go to Management →</a>
+                </div>
             </div>
         </div>
     </div>
