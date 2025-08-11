@@ -116,10 +116,6 @@ return [
             'base_url' => 'https://jdih.kemlu.go.id',
             'enabled' => env('ENABLE_JDIH_KEMLU_FALLBACK', true),
         ],
-        'jdihn' => [
-            'base_url' => 'https://jdihn.go.id',
-            'enabled' => env('ENABLE_JDIHN_FALLBACK', true),
-        ],
         'web_scraping' => [
             'enabled' => env('ENABLE_WEB_SCRAPING_FALLBACK', true),
             'respect_robots_txt' => env('WEB_SCRAPING_RESPECT_ROBOTS', true),
