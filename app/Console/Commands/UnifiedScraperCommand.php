@@ -1,21 +1,31 @@
 <?php
-// app/Console/Commands/ScrapeTikRegulations.php
 
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Services\Scrapers\BrowserPeraturanScraper;
-use App\Services\Scrapers\Enhanced\KemluTikScraper;
-use App\Services\Scrapers\Enhanced\KomdigiScraper;
-use App\Services\Scrapers\Enhanced\KemenkoScraper;
 use App\Models\DocumentSource;
 use App\Models\LegalDocument;
+use App\Services\Scrapers\ScraperFactory;
 use Illuminate\Support\Facades\Log;
 
-class ScrapeTikRegulations extends Command
+class UnifiedScraperCommand extends Command
 {
-    protected $signature = 'legal-docs:scrape-tik {--source=all} {--limit=50} {--test-mode}';
-    protected $description = 'Scrape TIK/IT regulations from multiple government sources';
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'legal-docs:scrape
+                            {--source=all : Specify a source to scrape (e.g., kemlu, komdigi, peraturan_go_id)}
+                            {--limit=50 : Limit the number of documents to scrape per source}
+                            {--test-mode : Run the scraper in test mode (limited documents)}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Unified command to scrape legal documents from various sources.';
 
     protected array $tikKeywords = [
         'teknologi informasi', 'teknologi komunikasi', 'tik', 'ict',
@@ -26,23 +36,25 @@ class ScrapeTikRegulations extends Command
         'fintech', 'startup', 'platform digital'
     ];
 
+    /**
+     * Execute the console command.
+     */
     public function handle(): int
     {
-        $this->info('🌐 Multi-Source TIK Regulation Scraper');
-        $this->info('🎯 Target: IT/Communications/Digital regulations');
+        $this->info('🌐 Unified Legal Document Scraper');
         $this->newLine();
 
-        $source = $this->option('source');
+        $sourceOption = $this->option('source');
         $limit = (int) $this->option('limit');
         $testMode = $this->option('test-mode');
 
         if ($testMode) {
             $this->warn('🧪 RUNNING IN TEST MODE - Limited scraping');
-            $limit = min($limit, 10);
+            $limit = min($limit, 10); // Further limit in test mode
         }
 
         $this->info("Configuration:");
-        $this->line("  • Source: {$source}");
+        $this->line("  • Source: {$sourceOption}");
         $this->line("  • Limit per source: {$limit}");
         $this->line("  • Test mode: " . ($testMode ? 'Yes' : 'No'));
         $this->newLine();
@@ -50,28 +62,32 @@ class ScrapeTikRegulations extends Command
         $totalDocuments = 0;
         $sourceResults = [];
 
-        // Define scraping sources
-        $sources = $this->getSources($source);
+        $sourcesToScrape = $this->getSourcesToScrape($sourceOption);
 
-        foreach ($sources as $sourceName => $config) {
+        if (empty($sourcesToScrape)) {
+            $this->error("No valid sources found to scrape.");
+            return Command::FAILURE;
+        }
+
+        foreach ($sourcesToScrape as $sourceName => $config) {
             $this->info("🔄 Scraping: {$config['name']}");
             $this->line("   URL: {$config['url']}");
             
             try {
-                $scraped = $this->scrapeSource($sourceName, $config, $limit, $testMode);
-                $sourceResults[$sourceName] = $scraped;
-                $totalDocuments += count($scraped);
+                $scrapedDocuments = $this->scrapeFromSource($sourceName, $config, $limit);
+                $sourceResults[$sourceName] = $scrapedDocuments;
+                $totalDocuments += count($scrapedDocuments);
                 
-                $this->info("   ✅ Scraped: " . count($scraped) . " documents");
+                $this->info("   ✅ Scraped: " . count($scrapedDocuments) . " documents");
                 
-                if (count($scraped) > 0) {
-                    $this->displaySampleDocs($scraped, 2);
+                if (count($scrapedDocuments) > 0) {
+                    $this->displaySampleDocs($scrapedDocuments, 2);
                 }
                 
             } catch (\Exception $e) {
                 $this->error("   ❌ Failed: " . $e->getMessage());
                 $sourceResults[$sourceName] = [];
-                Log::channel('legal-documents-errors')->error("TIK Scraper failed for {$sourceName}: " . $e->getMessage());
+                Log::channel('legal-documents-errors')->error("Unified Scraper failed for {$sourceName}: " . $e->getMessage());
             }
             
             $this->newLine();
@@ -84,60 +100,67 @@ class ScrapeTikRegulations extends Command
         return Command::SUCCESS;
     }
 
-    protected function getSources(string $source): array
+    protected function getSourcesToScrape(string $sourceOption): array
     {
         $allSources = [
             'peraturan_go_id' => [
                 'name' => 'Peraturan.go.id (National)',
                 'url' => 'https://peraturan.go.id',
-                'scraper' => 'browser',
+                'scraper_type' => 'browser',
                 'priority' => 1
             ],
             'kemlu' => [
                 'name' => 'JDIH Kemlu (MFA)',
                 'url' => 'https://jdih.kemlu.go.id',
-                'scraper' => 'enhanced_http',
+                'scraper_type' => 'enhanced_http',
                 'priority' => 2
             ],
             'komdigi' => [
                 'name' => 'JDIH Komdigi (ICT Ministry)',
                 'url' => 'https://jdih.komdigi.go.id',
-                'scraper' => 'enhanced_http',
+                'scraper_type' => 'enhanced_http',
                 'priority' => 1
             ],
             'kemenko' => [
                 'name' => 'JDIH Kemenko (Coordinating Ministry)',
                 'url' => 'https://jdih.kemenko.go.id',
-                'scraper' => 'enhanced_http',
+                'scraper_type' => 'enhanced_http',
                 'priority' => 3
             ]
         ];
 
-        if ($source === 'all') {
-            // Sort by priority
+        if ($sourceOption === 'all') {
             uasort($allSources, fn($a, $b) => $a['priority'] <=> $b['priority']);
             return $allSources;
         }
 
-        return isset($allSources[$source]) ? [$source => $allSources[$source]] : [];
+        return isset($allSources[$sourceOption]) ? [$sourceOption => $allSources[$sourceOption]] : [];
     }
 
-    protected function scrapeSource(string $sourceName, array $config, int $limit, bool $testMode): array
+    protected function scrapeFromSource(string $sourceName, array $config, int $limit): array
     {
-        $scraperType = $config['scraper'];
-        $documents = [];
+        $source = DocumentSource::firstOrCreate([
+            'name' => $sourceName
+        ], [
+            'display_name' => $config['name'],
+            'base_url' => $config['url'],
+            'status' => 'active',
+            'config' => [
+                'scraper_type' => $config['scraper_type'],
+                'tik_focused' => true // Assuming all these sources are TIK focused
+            ]
+        ]);
 
-        switch ($scraperType) {
-            case 'browser':
-                $documents = $this->scrapeBrowserSource($sourceName, $config, $limit);
-                break;
-                
-            case 'enhanced_http':
-                $documents = $this->scrapeHttpSource($sourceName, $config, $limit);
-                break;
+        $scraper = ScraperFactory::create($source);
+
+        if (!$scraper) {
+            $this->error("Could not create scraper for {$sourceName}.");
+            return [];
         }
 
-        // Filter for TIK-related content
+        $documents = $scraper->scrapeWithLimit($limit);
+
+        // Filter for TIK-related content (if not already handled by scraper)
         $tikDocuments = $this->filterTikDocuments($documents);
         
         $this->line("   🔍 Filtered: " . count($documents) . " → " . count($tikDocuments) . " TIK-related");
@@ -145,64 +168,16 @@ class ScrapeTikRegulations extends Command
         return $tikDocuments;
     }
 
-    protected function scrapeBrowserSource(string $sourceName, array $config, int $limit): array
-    {
-        // Get or create document source
-        $source = DocumentSource::firstOrCreate([
-            'name' => $sourceName
-        ], [
-            'display_name' => $config['name'],
-            'base_url' => $config['url'],
-            'status' => 'active',
-            'config' => [
-                'scraper_type' => 'browser',
-                'tik_focused' => true
-            ]
-        ]);
-
-        // Use browser scraper
-        $scraper = new BrowserPeraturanScraper($source);
-        return $scraper->scrapeWithLimit($limit);
-    }
-
-    protected function scrapeHttpSource(string $sourceName, array $config, int $limit): array
-    {
-        // Get or create document source
-        $source = DocumentSource::firstOrCreate([
-            'name' => $sourceName
-        ], [
-            'display_name' => $config['name'],
-            'base_url' => $config['url'],
-            'status' => 'active',
-            'config' => [
-                'scraper_type' => 'enhanced_http',
-                'tik_focused' => true
-            ]
-        ]);
-
-        // Use appropriate enhanced scraper
-        switch ($sourceName) {
-            case 'kemlu':
-                $scraper = new KemluTikScraper($source);
-                break;
-            case 'komdigi':
-                $scraper = new KomdigiScraper($source);
-                break;
-            case 'kemenko':
-                $scraper = new KemenkoScraper($source);
-                break;
-            default:
-                throw new \Exception("No scraper configured for source: {$sourceName}");
-        }
-
-        return $scraper->scrapeWithLimit($limit);
-    }
-
     protected function filterTikDocuments(array $documents): array
     {
         $tikDocuments = [];
 
         foreach ($documents as $doc) {
+            // Ensure $doc is an object with properties, not an array
+            if (is_array($doc)) {
+                $doc = (object) $doc;
+            }
+
             if ($this->isTikRelated($doc)) {
                 $tikDocuments[] = $doc;
             }
@@ -213,6 +188,11 @@ class ScrapeTikRegulations extends Command
 
     protected function isTikRelated($document): bool
     {
+        // Check if the document object has the necessary properties
+        if (!isset($document->title) && !isset($document->full_text) && !isset($document->metadata['subject'])) {
+            return false; // Not enough data to determine TIK relevance
+        }
+
         $title = strtolower($document->title ?? '');
         $content = strtolower($document->full_text ?? '');
         $subject = strtolower($document->metadata['subject'] ?? '');
@@ -233,7 +213,12 @@ class ScrapeTikRegulations extends Command
         $this->line("   📋 Sample documents:");
         
         foreach (array_slice($documents, 0, $count) as $i => $doc) {
-            $title = substr($doc->title, 0, 60) . '...';
+            // Ensure $doc is an object with properties
+            if (is_array($doc)) {
+                $doc = (object) $doc;
+            }
+
+            $title = substr($doc->title ?? '', 0, 60) . '...';
             $type = $doc->document_type ?? 'Unknown';
             $agency = $doc->metadata['agency'] ?? 'N/A';
             
