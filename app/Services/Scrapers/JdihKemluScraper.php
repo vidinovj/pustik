@@ -14,36 +14,161 @@ class JdihKemluScraper extends BaseScraper
     public function scrape(): array
     {
         $results = [];
+        
+        // Start with debugging the listing page first
+        $this->debugListingPage();
+        
         $documentUrls = $this->getDocumentUrls();
         
         Log::channel('legal-documents')->info("JDIH Kemlu: Starting scrape of " . count($documentUrls) . " documents");
 
-        foreach ($documentUrls as $url) {
+        // Limit to first 5 URLs for debugging
+        $debugUrls = array_slice($documentUrls, 0, 5);
+        
+        foreach ($debugUrls as $url) {
+            Log::channel('legal-documents')->info("JDIH Kemlu: Processing URL: {$url}");
+            
             $html = $this->makeRequest($url);
             
             if ($html) {
+                $this->debugDocumentPage($html, $url);
+                
                 $dom = $this->parseHtml($html);
                 $documentData = $this->extractDocumentData($dom, $url);
                 
                 if ($documentData) {
+                    Log::channel('legal-documents')->info("JDIH Kemlu: Extracted data for {$url}", $documentData);
                     $document = $this->saveDocument($documentData);
                     if ($document) {
                         $results[] = $document;
                         $this->source->incrementDocumentCount();
                     }
+                } else {
+                    Log::channel('legal-documents-errors')->error("JDIH Kemlu: Failed to extract data from {$url}");
                 }
-            }
-            
-            // Progress logging every 10 documents
-            if (count($results) % 10 === 0) {
-                Log::channel('legal-documents')->info("JDIH Kemlu: Processed " . count($results) . " documents");
+            } else {
+                Log::channel('legal-documents-errors')->error("JDIH Kemlu: Failed to fetch HTML from {$url}");
             }
         }
 
         $this->source->markAsScraped();
-        Log::channel('legal-documents')->info("JDIH Kemlu: Completed scrape with " . count($results) . " documents");
+        Log::channel('legal-documents')->info("JDIH Kemlu: Completed debug scrape with " . count($results) . " documents");
         
         return $results;
+    }
+
+    /**
+     * Debug the listing page structure.
+     */
+    protected function debugListingPage(): void
+    {
+        $testUrl = 'https://jdih.kemlu.go.id/dokumen?jenis=Permenlu';
+        Log::channel('legal-documents')->info("JDIH Kemlu: Debugging listing page: {$testUrl}");
+        
+        $html = $this->makeRequest($testUrl);
+        
+        if ($html) {
+            $dom = $this->parseHtml($html);
+            $xpath = $this->createXPath($dom);
+            
+            // Debug: Check page title
+            $titleElement = $xpath->query('//title')->item(0);
+            $title = $titleElement ? $this->extractText($titleElement) : 'No title found';
+            Log::channel('legal-documents')->info("JDIH Kemlu: Page title: {$title}");
+            
+            // Debug: Check for any links
+            $allLinks = $xpath->query('//a[@href]');
+            Log::channel('legal-documents')->info("JDIH Kemlu: Found {$allLinks->length} total links");
+            
+            // Debug: Check specific link patterns
+            $documentLinks = $xpath->query('//a[contains(@href, "/dokumen/")]');
+            Log::channel('legal-documents')->info("JDIH Kemlu: Found {$documentLinks->length} document links");
+            
+            // Alternative patterns to try
+            $altPatterns = [
+                '//a[contains(@href, "detail")]',
+                '//a[contains(@href, "permenlu")]',
+                '//table//a',
+                '//div[@class="content"]//a',
+                '//ul//a',
+                '//tbody//a'
+            ];
+            
+            foreach ($altPatterns as $pattern) {
+                $matches = $xpath->query($pattern);
+                Log::channel('legal-documents')->info("JDIH Kemlu: Pattern '{$pattern}' found {$matches->length} matches");
+                
+                if ($matches->length > 0 && $matches->length < 20) {
+                    for ($i = 0; $i < min(3, $matches->length); $i++) {
+                        $link = $matches->item($i);
+                        $href = $link->getAttribute('href');
+                        $text = trim($link->textContent);
+                        Log::channel('legal-documents')->info("JDIH Kemlu: Sample link {$i}: {$href} - {$text}");
+                    }
+                }
+            }
+            
+            // Save sample HTML for manual inspection
+            if (strlen($html) > 0) {
+                $samplePath = storage_path('logs/jdih_kemlu_sample.html');
+                file_put_contents($samplePath, $html);
+                Log::channel('legal-documents')->info("JDIH Kemlu: Sample HTML saved to {$samplePath}");
+            }
+        }
+    }
+
+    /**
+     * Debug document page structure.
+     */
+    protected function debugDocumentPage(string $html, string $url): void
+    {
+        $dom = $this->parseHtml($html);
+        $xpath = $this->createXPath($dom);
+        
+        Log::channel('legal-documents')->info("JDIH Kemlu: Debugging document page: {$url}");
+        
+        // Check page title
+        $titleElement = $xpath->query('//title')->item(0);
+        $title = $titleElement ? $this->extractText($titleElement) : 'No title found';
+        Log::channel('legal-documents')->info("JDIH Kemlu: Document page title: {$title}");
+        
+        // Try different title patterns
+        $titlePatterns = [
+            '//h1',
+            '//h2',
+            '//h3',
+            '//*[@class="title"]',
+            '//*[@class="document-title"]',
+            '//*[contains(@class, "judul")]',
+            '//*[contains(@class, "title")]'
+        ];
+        
+        foreach ($titlePatterns as $pattern) {
+            $matches = $xpath->query($pattern);
+            if ($matches->length > 0) {
+                $text = $this->extractText($matches->item(0));
+                Log::channel('legal-documents')->info("JDIH Kemlu: Title pattern '{$pattern}': {$text}");
+            }
+        }
+        
+        // Check for metadata patterns
+        $metadataPatterns = [
+            '//*[contains(text(), "Nomor")]',
+            '//*[contains(text(), "Tanggal")]',
+            '//*[contains(text(), "Jenis")]',
+            '//*[@class="meta"]',
+            '//*[@class="metadata"]'
+        ];
+        
+        foreach ($metadataPatterns as $pattern) {
+            $matches = $xpath->query($pattern);
+            if ($matches->length > 0) {
+                for ($i = 0; $i < min(2, $matches->length); $i++) {
+                    $text = $this->extractText($matches->item($i));
+                    Log::channel('legal-documents')->info("JDIH Kemlu: Metadata pattern '{$pattern}': {$text}");
+                }
+            }
+        }
     }
 
     /**
@@ -54,12 +179,9 @@ class JdihKemluScraper extends BaseScraper
         $urls = [];
         $baseUrl = 'https://jdih.kemlu.go.id';
         
-        // Document listing pages to scrape
+        // Start with just one listing page for debugging
         $listingPages = [
-            '/dokumen?jenis=Permenlu',           // Ministerial Regulations
-            '/dokumen?jenis=Kepdirjen',          // Director General Decisions
-            '/dokumen?jenis=Kepmenko',           // Coordinating Minister Decisions
-            '/dokumen?jenis=Surat+Edaran',       // Circulars
+            '/dokumen?jenis=Permenlu',
         ];
 
         foreach ($listingPages as $listingPage) {
@@ -67,6 +189,9 @@ class JdihKemluScraper extends BaseScraper
             $urls = array_merge($urls, $pageUrls);
             
             Log::channel('legal-documents')->info("JDIH Kemlu: Found " . count($pageUrls) . " documents on page: {$listingPage}");
+            
+            // Break after first page for debugging
+            break;
         }
 
         return array_unique($urls);
@@ -79,32 +204,50 @@ class JdihKemluScraper extends BaseScraper
     {
         $urls = [];
         $page = 1;
-        $maxPages = $this->source->getConfig('max_pages', 5); // Limit pages for demo
+        $maxPages = 1; // Limit to 1 page for debugging
 
         while ($page <= $maxPages) {
             $pageUrl = $listingUrl . "&page={$page}";
             $html = $this->makeRequest($pageUrl);
             
             if (!$html) {
+                Log::channel('legal-documents-errors')->error("JDIH Kemlu: Failed to get HTML for {$pageUrl}");
                 break;
             }
 
             $dom = $this->parseHtml($html);
             $xpath = $this->createXPath($dom);
             
-            // Extract document links (adjust selector based on actual HTML structure)
-            $documentLinks = $xpath->query('//table//a[contains(@href, "/dokumen/")]');
+            // Try multiple link patterns
+            $linkPatterns = [
+                '//table//a[contains(@href, "/dokumen/")]',
+                '//a[contains(@href, "/dokumen/")]',
+                '//a[contains(@href, "detail")]',
+                '//tbody//a',
+                '//div[contains(@class, "content")]//a'
+            ];
             
-            if ($documentLinks->length === 0) {
-                Log::channel('legal-documents')->info("JDIH Kemlu: No more documents found on page {$page}");
-                break;
-            }
-
-            foreach ($documentLinks as $link) {
-                $href = $this->extractHref($link, 'https://jdih.kemlu.go.id');
-                if ($href && !in_array($href, $urls)) {
-                    $urls[] = $href;
+            $foundLinks = false;
+            foreach ($linkPatterns as $pattern) {
+                $documentLinks = $xpath->query($pattern);
+                
+                if ($documentLinks->length > 0) {
+                    Log::channel('legal-documents')->info("JDIH Kemlu: Using pattern '{$pattern}' - found {$documentLinks->length} links");
+                    
+                    foreach ($documentLinks as $link) {
+                        $href = $this->extractHref($link, 'https://jdih.kemlu.go.id');
+                        if ($href && !in_array($href, $urls)) {
+                            $urls[] = $href;
+                            Log::channel('legal-documents')->info("JDIH Kemlu: Added URL: {$href}");
+                        }
+                    }
+                    $foundLinks = true;
+                    break; // Use first working pattern
                 }
+            }
+            
+            if (!$foundLinks) {
+                Log::channel('legal-documents')->warning("JDIH Kemlu: No document links found on page {$page}");
             }
 
             $page++;
@@ -121,50 +264,50 @@ class JdihKemluScraper extends BaseScraper
         $xpath = $this->createXPath($dom);
         
         try {
-            // Extract title (adjust selectors based on actual HTML structure)
-            $titleElement = $xpath->query('//h1[@class="document-title"] | //h1 | //title')->item(0);
-            $title = $this->cleanText($this->extractText($titleElement));
+            // Try multiple title patterns
+            $titlePatterns = [
+                '//h1[@class="document-title"]',
+                '//h1',
+                '//h2',
+                '//title',
+                '//*[contains(@class, "judul")]',
+                '//*[contains(@class, "title")]'
+            ];
+            
+            $title = '';
+            foreach ($titlePatterns as $pattern) {
+                $titleElement = $xpath->query($pattern)->item(0);
+                if ($titleElement) {
+                    $title = $this->cleanText($this->extractText($titleElement));
+                    if (!empty($title) && strlen($title) > 10) {
+                        Log::channel('legal-documents')->info("JDIH Kemlu: Found title with pattern '{$pattern}': {$title}");
+                        break;
+                    }
+                }
+            }
             
             if (empty($title)) {
-                Log::channel('legal-documents')->warning("JDIH Kemlu: No title found for URL: {$url}");
+                Log::channel('legal-documents-errors')->error("JDIH Kemlu: No title found for URL: {$url}");
                 return null;
             }
 
-            // Extract document number
-            $numberElement = $xpath->query('//*[contains(text(), "Nomor")]/following-sibling::*[1] | //*[contains(@class, "document-number")]')->item(0);
-            $documentNumber = $this->cleanText($this->extractText($numberElement));
-
-            // Extract document type
-            $typeElement = $xpath->query('//*[contains(text(), "Jenis")]/following-sibling::*[1] | //*[contains(@class, "document-type")]')->item(0);
-            $documentType = $this->cleanText($this->extractText($typeElement)) ?: $this->extractTypeFromUrl($url);
-
-            // Extract issue date
-            $dateElement = $xpath->query('//*[contains(text(), "Tanggal")]/following-sibling::*[1] | //*[contains(@class, "document-date")]')->item(0);
-            $issueDateString = $this->cleanText($this->extractText($dateElement));
-            $issueDate = $this->parseIndonesianDate($issueDateString);
-
-            // Extract full text content
-            $contentElement = $xpath->query('//div[contains(@class, "content")] | //div[contains(@class, "document-content")] | //main')->item(0);
-            $fullText = $this->cleanText($this->extractText($contentElement));
-
-            // Build metadata
-            $metadata = [
-                'source_site' => 'JDIH Kemlu',
-                'scraped_at' => now()->toISOString(),
-                'original_url' => $url,
-                'document_status' => $this->extractDocumentStatus($xpath),
-                'related_documents' => $this->extractRelatedDocuments($xpath),
-            ];
-
-            return [
+            // Simplified extraction for debugging
+            $documentData = [
                 'title' => $title,
-                'document_type' => $documentType,
-                'document_number' => $documentNumber,
-                'issue_date' => $issueDate,
+                'document_type' => $this->extractTypeFromUrl($url),
+                'document_number' => 'DEBUG-' . date('YmdHis'),
+                'issue_date' => now()->format('Y-m-d'),
                 'source_url' => $url,
-                'metadata' => $metadata,
-                'full_text' => $fullText,
+                'metadata' => [
+                    'source_site' => 'JDIH Kemlu',
+                    'scraped_at' => now()->toISOString(),
+                    'debug_mode' => true,
+                ],
+                'full_text' => substr($title, 0, 500), // Truncated for debugging
             ];
+
+            Log::channel('legal-documents')->info("JDIH Kemlu: Successfully extracted data", $documentData);
+            return $documentData;
 
         } catch (\Exception $e) {
             Log::channel('legal-documents-errors')->error("JDIH Kemlu: Error extracting data from {$url}: {$e->getMessage()}");
@@ -182,38 +325,6 @@ class JdihKemluScraper extends BaseScraper
         if (str_contains($url, 'kepmenko')) return 'Keputusan Menteri Koordinator';
         if (str_contains($url, 'surat-edaran')) return 'Surat Edaran';
         
-        return 'Dokumen Hukum';
-    }
-
-    /**
-     * Extract document status if available.
-     */
-    protected function extractDocumentStatus(DOMXPath $xpath): ?string
-    {
-        $statusElement = $xpath->query('//*[contains(text(), "Status")]/following-sibling::*[1]')->item(0);
-        return $statusElement ? $this->cleanText($this->extractText($statusElement)) : null;
-    }
-
-    /**
-     * Extract related documents if available.
-     */
-    protected function extractRelatedDocuments(DOMXPath $xpath): array
-    {
-        $related = [];
-        $relatedLinks = $xpath->query('//div[contains(@class, "related")]//a | //section[contains(@class, "related")]//a');
-        
-        foreach ($relatedLinks as $link) {
-            $href = $this->extractHref($link, 'https://jdih.kemlu.go.id');
-            $text = $this->cleanText($this->extractText($link));
-            
-            if ($href && $text) {
-                $related[] = [
-                    'title' => $text,
-                    'url' => $href,
-                ];
-            }
-        }
-
-        return $related;
+        return 'Dokumen Hukum (Debug)';
     }
 }

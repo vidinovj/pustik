@@ -11,7 +11,9 @@ class ScraperFactory
      * Available scraper classes mapped to source names.
      */
     protected static array $scrapers = [
+        'peraturan_go_id' => FixedPeraturanScraper::class,
         'jdih_kemlu' => JdihKemluScraper::class,
+        'jdih_perpusnas_api' => JdihPerpusnasApiScraper::class,
         'jdihn' => JdihnScraper::class,
         'bpk_jdih' => BpkJdihScraper::class,
         'kominfo_jdih' => KominfoJdihScraper::class,
