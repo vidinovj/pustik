@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Services\Scrapers\Enhanced;
+namespace App\Services\Scrapers;
 
-use App\Services\Scrapers\Enhanced\KemluTikScraper;
+use App\Services\Scrapers\KemluTikScraper;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use DOMDocument;

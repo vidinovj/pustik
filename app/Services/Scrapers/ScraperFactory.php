@@ -12,11 +12,11 @@ class ScraperFactory
      */
     protected static array $scrapers = [
         'peraturan_go_id' => FixedPeraturanScraper::class,
-        'jdih_kemlu' => JdihKemluScraper::class,
+        'peraturan_go_id_session_aware' => SessionAwarePeraturanScraper::class,
+        'jdih_kemlu' => KemluTikScraper::class,
         'jdih_perpusnas_api' => JdihPerpusnasApiScraper::class,
-        'jdihn' => JdihnScraper::class,
-        'bpk_jdih' => BpkJdihScraper::class,
-        'komdigi_jdih' => KomdigiJdihScraper::class,
+        'komdigi_jdih' => KomdigiScraper::class,
+        'kemenko' => KemenkoScraper::class,
     ];
 
     /**
