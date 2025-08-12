@@ -19,7 +19,12 @@ class FilterKebijakanBukanMenluController extends Controller
         $filters = $request->only(['jenis_kebijakan', 'nomor_kebijakan', 'tahun_penerbitan_min', 'tahun_penerbitan_max', 'perihal_kebijakan', 'instansi', 'sort_by', 'sort_order']);
 
         // Build query with filters
-        $query = LegalDocument::where('document_type', 'Kebijakan TIK Non Kemlu');
+        $query = LegalDocument::whereIn('document_type', [
+            'Undang-Undang',
+            'Peraturan Pemerintah',
+            'Peraturan Presiden',
+            'Peraturan Menteri'
+        ])->whereJsonDoesntContain('metadata->agency', 'Kementerian Luar Negeri');
 
         if (!empty($filters['jenis_kebijakan'])) {
             // This filter is now handled by the initial where clause on document_type
@@ -47,7 +52,13 @@ class FilterKebijakanBukanMenluController extends Controller
         // Apply sorting if specified
         if (!empty($filters['sort_by']) && in_array($filters['sort_by'], ['nomor_kebijakan', 'tahun_penerbitan'])) {
             $sortOrder = $filters['sort_order'] ?? 'asc'; // Default to ascending order
-            $query->orderBy($filters['sort_by'], $sortOrder);
+            $sortByColumn = $filters['sort_by'];
+            if ($sortByColumn === 'nomor_kebijakan') {
+                $sortByColumn = 'document_number';
+            } elseif ($sortByColumn === 'tahun_penerbitan') {
+                $sortByColumn = 'issue_date';
+            }
+            $query->orderBy($sortByColumn, $sortOrder);
         }
 
         // Paginate the filtered and sorted results

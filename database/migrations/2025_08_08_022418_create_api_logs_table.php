@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('api_logs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('document_source_id')->constrained('document_sources')->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->foreignUuid('document_source_id')->constrained('document_sources')->onDelete('cascade');
             $table->string('endpoint');
             $table->string('request_method', 10);
             $table->integer('response_status');

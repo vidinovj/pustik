@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('url_monitoring', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('url')->unique();
             $table->timestamp('last_checked_at')->nullable();
             $table->string('status', 50)->default('unknown'); // e.g., 'active', 'broken', 'redirected'

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('legal_documents', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('title');
             $table->string('document_type')->nullable();
             $table->string('document_number')->nullable(); // Added from model
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('source_url')->nullable();
             $table->json('metadata')->nullable();
             $table->longText('full_text')->nullable();
-            $table->foreignId('document_source_id')->nullable()->constrained('document_sources')->onDelete('set null'); // Added from model
+            $table->foreignUuid('document_source_id')->nullable()->constrained('document_sources')->onDelete('set null'); // Added from model
             $table->string('status')->default('draft'); // Added from model, with default
             $table->string('checksum')->unique()->nullable(); // Added from model
             $table->timestamps();

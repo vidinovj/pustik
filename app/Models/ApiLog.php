@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ApiLog extends Model
 {
+    use HasUuids;
     protected $fillable = [
         'document_source_id',
         'endpoint',
@@ -60,7 +62,7 @@ class ApiLog extends Model
      * Create a log entry for an API request.
      */
     public static function logRequest(
-        int $sourceId,
+        string $sourceId,
         string $endpoint,
         string $method,
         int $status,

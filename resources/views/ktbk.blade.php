@@ -2,9 +2,9 @@
     <!-- Menampilkan judul halaman -->
     <x-slot:title>Kebijakan TIK by Kemlu</x-slot:title>
 
-    <div class="container mx-auto px-4 py-6">
+    <div class="container mx-auto px-4 py-6 max-w-screen-xl">
         <!-- Filter Form -->
-        <form method="GET" action="{{ url('ktbk') }}" class="mb-6">
+        <form method="GET" action="{{ url('ktbk') }}" class="mb-6 max-w-full mx-auto">
             <div class="flex space-x-4 mb-4">
                 <!-- Filter Jenis Kebijakan -->
                 <div class="flex-1">
@@ -74,7 +74,8 @@
                     <select 
                         name="sort_by" 
                         id="sort_by" 
-                        class="border p-2 w-full rounded-md">
+                        class="border p-2 w-full rounded-md"
+                        onchange="this.form.submit()">
                         <option value="" {{ request('sort_by') == '' ? 'selected' : '' }}>-- Pilih --</option>
                         <option value="tahun_penerbitan" {{ request('sort_by') == 'tahun_penerbitan' ? 'selected' : '' }}>Tahun Penerbitan</option>
                         <option value="nomor_kebijakan" {{ request('sort_by') == 'nomor_kebijakan' ? 'selected' : '' }}>Nomor Kebijakan</option>
@@ -87,7 +88,8 @@
                     <select 
                         name="sort_order" 
                         id="sort_order" 
-                        class="border p-2 w-full rounded-md">
+                        class="border p-2 w-full rounded-md"
+                        onchange="this.form.submit()">
                         <option value="asc" {{ request('sort_order') == 'asc' ? 'selected' : '' }}>Dari bawah ke atas (NAIK)</option>
                         <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>Dari atas ke bawah (TURUN)</option>
                     </select>
@@ -103,7 +105,7 @@
             </div>
         </form>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto max-w-full mx-auto">
             <table class="w-full bg-white shadow-md rounded-lg overflow-hidden">
                 <thead>
                     <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
@@ -117,14 +119,14 @@
                 <tbody class="text-gray-700 text-sm font-light">
                     @forelse($kebijakan as $item)
                         <tr class="border-b border-gray-200 hover:bg-gray-100">
-                            <td class="py-3 px-6 text-left whitespace-nowrap">{{ $item->jenis_kebijakan }}</td>
-                            <td class="py-3 px-6 text-left">{{ $item->nomor_kebijakan }}</td>
-                            <td class="py-3 px-6 text-left">{{ $item->tahun_penerbitan }}</td>
-                            <td class="py-3 px-6 text-left">{{ $item->perihal_kebijakan }}</td>
+                            <td class="py-3 px-6 text-left whitespace-nowrap">{{ $item->document_type }}</td>
+                            <td class="py-3 px-6 text-left">{{ $item->document_number }}</td>
+                            <td class="py-3 px-6 text-left">{{ \Carbon\Carbon::parse($item->issue_date)->year }}</td>
+                            <td class="py-3 px-6 text-left break-words">{{ $item->title }}</td>
                             <td class="py-3 px-6 text-left">
-                                @if ($item->tautan)
+                                @if ($item->source_url)
                                     <a 
-                                        href="{{ $item->tautan }}" 
+                                        href="{{ $item->source_url }}" 
                                         target="_blank" 
                                         class="text-blue-500 underline">
                                         Lihat Tautan

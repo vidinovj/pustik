@@ -38,7 +38,7 @@
                 <!-- Sort Inputs -->
                 <div>
                     <label for="sort_by" class="block text-sm font-medium text-gray-700 mb-1">Urutkan Berdasarkan</label>
-                    <select id="sort_by" name="sort_by" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200">
+                    <select id="sort_by" name="sort_by" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200" onchange="this.form.submit()">
                         <option value="">Pilih...</option>
                         <option value="nomor_kebijakan" {{ request('sort_by') == 'nomor_kebijakan' ? 'selected' : '' }}>Nomor Kebijakan</option>
                         <option value="tahun_penerbitan" {{ request('sort_by') == 'tahun_penerbitan' ? 'selected' : '' }}>Tahun Penerbitan</option>
@@ -47,7 +47,7 @@
 
                 <div>
                     <label for="sort_order" class="block text-sm font-medium text-gray-700 mb-1">Urutan</label>
-                    <select id="sort_order" name="sort_order" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200">
+                    <select id="sort_order" name="sort_order" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200" onchange="this.form.submit()">
                         <option value="asc" {{ request('sort_order') == 'asc' ? 'selected' : '' }}>Dari bawah ke atas (NAIK)</option>
                         <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>Dari atas ke bawah (TURUN)</option>
                     </select>
@@ -76,14 +76,14 @@
                 <tbody class="text-gray-700 text-sm">
                     @forelse($kebijakan as $item)
                         <tr class="border-b hover:bg-gray-50">
-                            <td class="py-3 px-4">{{ $item->jenis_kebijakan }}</td>
-                            <td class="py-3 px-4">{{ $item->nomor_kebijakan }}</td>
-                            <td class="py-3 px-4">{{ $item->tahun_penerbitan }}</td>
-                            <td class="py-3 px-4">{{ $item->perihal }}</td>
-                            <td class="py-3 px-4">{{ $item->instansi }}</td>
+                            <td class="py-3 px-4">{{ $item->document_type }}</td>
+                            <td class="py-3 px-4">{{ $item->document_number }}</td>
+                            <td class="py-3 px-4">{{ \Carbon\Carbon::parse($item->issue_date)->year }}</td>
+                            <td class="py-3 px-4 break-words">{{ $item->title }}</td>
+                            <td class="py-3 px-4">{{ $item->metadata['agency'] ?? '' }}</td>
                             <td class="py-3 px-4">
-                                @if ($item->tautan)
-                                    <a href="{{ $item->tautan }}" target="_blank" class="text-blue-500 underline">Lihat Tautan</a>
+                                @if ($item->source_url)
+                                    <a href="{{ $item->source_url }}" target="_blank" class="text-blue-500 underline">Lihat Tautan</a>
                                 @else
                                     <span class="text-gray-500">Tidak ada tautan</span>
                                 @endif

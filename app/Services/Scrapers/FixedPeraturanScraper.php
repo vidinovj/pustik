@@ -29,6 +29,7 @@ class FixedPeraturanScraper extends BaseScraper
             foreach ($categoryUrls as $categoryUrl) {
                 Log::channel('legal-documents')->info("Fixed Peraturan.go.id: Processing category: {$categoryUrl}");
                 
+                // Call getDocumentUrlsFromCategory directly
                 $documentUrls = $this->getDocumentUrlsFromCategory($categoryUrl);
                 
                 Log::channel('legal-documents')->info("Fixed Peraturan.go.id: Found " . count($documentUrls) . " document URLs in category");
@@ -40,7 +41,6 @@ class FixedPeraturanScraper extends BaseScraper
                     $html = $this->makeRequest($docUrl);
                     
                     if ($html) {
-                        // Check if we got a login page
                         if ($this->isLoginPage($html)) {
                             Log::channel('legal-documents-errors')->warning("Fixed Peraturan.go.id: Hit login page at {$docUrl}");
                             continue;
@@ -69,11 +69,11 @@ class FixedPeraturanScraper extends BaseScraper
                 }
             }
 
-            // Try search functionality as well
-            if (count($results) < 10) {
-                $searchResults = $this->searchUsingDiscoveredForm();
-                $results = array_merge($results, $searchResults);
-            }
+            // Remove search functionality for now, focus on category browsing
+            // if (count($results) < 10) {
+            //     $searchResults = $this->searchUsingDiscoveredForm();
+            //     $results = array_merge($results, $searchResults);
+            // }
 
         } catch (\Exception $e) {
             Log::channel('legal-documents-errors')->error("Fixed Peraturan.go.id: Scraping failed: {$e->getMessage()}");
@@ -100,51 +100,15 @@ class FixedPeraturanScraper extends BaseScraper
                 $dom = $this->parseHtml($html);
                 $xpath = $this->createXPath($dom);
                 
-                // Look for links matching the discovered pattern: /id/peraturan-*
-                $documentLinks = $xpath->query('//a[starts-with(@href, "/id/peraturan-")]');
+                // Look for links within the document strips
+                $documentLinks = $xpath->query('//div[@class="strip grid"]//p/a[contains(@href, "/id/uu-") or contains(@href, "/id/pp-") or contains(@href, "/id/perpres-") or contains(@href, "/id/permen-")]');
                 
-                Log::channel('legal-documents')->info("Fixed Peraturan.go.id: Found {$documentLinks->length} document links with /id/peraturan- pattern");
+                Log::channel('legal-documents')->info("Fixed Peraturan.go.id: Found {" . $documentLinks->length . "} document links with specific patterns");
                 
                 foreach ($documentLinks as $link) {
                     $href = $this->extractHref($link, 'https://peraturan.go.id');
                     if ($href && !in_array($href, $urls)) {
                         $urls[] = $href;
-                    }
-                }
-                
-                // Fallback: try other patterns if no /id/peraturan- links found
-                if (count($urls) === 0) {
-                    $fallbackPatterns = [
-                        '//a[contains(@href, "/peraturan")]',
-                        '//a[contains(@href, "/id/")]',
-                        '//table//a',
-                        '//tbody//a'
-                    ];
-                    
-                    foreach ($fallbackPatterns as $pattern) {
-                        $links = $xpath->query($pattern);
-                        
-                        if ($links->length > 0) {
-                            Log::channel('legal-documents')->info("Fixed Peraturan.go.id: Using fallback pattern '{$pattern}' - found {$links->length} links");
-                            
-                            foreach ($links as $link) {
-                                $href = $this->extractHref($link, 'https://peraturan.go.id');
-                                $text = trim($link->textContent);
-                                
-                                // Skip obvious non-document links
-                                if ($href && !in_array($href, $urls) && 
-                                    !stripos($text, 'login') && 
-                                    !stripos($text, 'download') &&
-                                    !stripos($href, 'login')) {
-                                    $urls[] = $href;
-                                }
-                            }
-                            
-                            // Use first working fallback pattern
-                            if (count($urls) > 0) {
-                                break;
-                            }
-                        }
                     }
                 }
             }
@@ -183,7 +147,7 @@ class FixedPeraturanScraper extends BaseScraper
                     // Look for document links in search results
                     $resultLinks = $xpath->query('//a[starts-with(@href, "/id/peraturan-")]');
                     
-                    Log::channel('legal-documents')->info("Fixed Peraturan.go.id: Found {$resultLinks->length} search results for '{$term}'");
+                    Log::channel('legal-documents')->info("Fixed Peraturan.go.id: Found {" . $resultLinks->length . "} search results for '{$term}'");
                     
                     foreach ($resultLinks as $link) {
                         $href = $this->extractHref($link, 'https://peraturan.go.id');
@@ -254,104 +218,69 @@ class FixedPeraturanScraper extends BaseScraper
         $xpath = $this->createXPath($dom);
         
         try {
-            // Get page title
-            $titleElement = $xpath->query('//title')->item(0);
-            $pageTitle = $titleElement ? $this->cleanText($this->extractText($titleElement)) : '';
+            // Extract title
+            $titleElement = $xpath->query('//div[@class="strip grid"]//p[not(@style)]/a')->item(0);
+            $title = $titleElement ? $this->cleanText($this->extractText($titleElement)) : '';
             
-            // Skip if it's a login page
-            if ($this->isLoginPage($pageTitle)) {
-                Log::channel('legal-documents-errors')->warning("Fixed Peraturan.go.id: Skipping login page: {$url}");
-                return null;
-            }
-            
-            // Extract content title
-            $titlePatterns = [
-                '//h1[@class="title"]',
-                '//h1',
-                '//h2[@class="title"]', 
-                '//h2',
-                '//*[@class="document-title"]',
-                '//*[contains(@class, "judul")]'
-            ];
-            
-            $title = '';
-            foreach ($titlePatterns as $pattern) {
-                $titleElement = $xpath->query($pattern)->item(0);
-                if ($titleElement) {
-                    $title = $this->cleanText($this->extractText($titleElement));
-                    if (!empty($title) && strlen($title) > 15 && !stripos($title, 'login')) {
-                        break;
-                    }
-                }
-            }
-            
-            // Fallback to page title if no good content title
-            if (empty($title) || stripos($title, 'login') !== false) {
-                $title = $pageTitle;
-            }
-            
-            // Final validation
-            if (empty($title) || strlen($title) < 15 || stripos($title, 'login') !== false) {
-                Log::channel('legal-documents-errors')->warning("Fixed Peraturan.go.id: Invalid or login title for URL: {$url} - Title: {$title}");
-                return null;
-            }
+            // Extract document type
+            $documentTypeElement = $xpath->query('//div[@class="strip grid"]//a[@class="float-right"]')->item(0);
+            $documentType = $documentTypeElement ? $this->cleanText($this->extractText($documentTypeElement)) : 'Unknown';
 
-            // Extract document number from URL pattern
-            $documentNumber = '';
-            if (preg_match('/\/id\/(peraturan-[^\/]+)/', $url, $matches)) {
-                $documentNumber = $matches[1];
-            }
+            // Extract document number
+            $documentNumberElement = $xpath->query('//div[@class="strip grid"]//p[@style="padding-top: -2;"]')->item(0);
+            $documentNumberFull = $documentNumberElement ? $this->cleanText($this->extractText($documentNumberElement)) : '';
+            preg_match('/Nomor\s+(\d+[\/\\w\\-\d]*)/i', $documentNumberFull, $matches);
+            $documentNumber = $matches[1] ?? '';
 
-            // Extract document type from URL
-            $documentType = 'Peraturan Perundang-undangan';
-            if (stripos($url, '/uu/') !== false) {
-                $documentType = 'Undang-Undang';
-            } elseif (stripos($url, '/pp/') !== false) {
-                $documentType = 'Peraturan Pemerintah';
-            } elseif (stripos($url, '/perpres/') !== false) {
-                $documentType = 'Peraturan Presiden';
-            } elseif (stripos($url, '/permen/') !== false) {
-                $documentType = 'Peraturan Menteri';
-            }
+            // Extract issue date (year)
+            $issueYearElement = $xpath->query('//div[@class="strip grid"]//a[@class="wish_bt"]')->item(0);
+            $issueYear = $issueYearElement ? $this->cleanText($this->extractText($issueYearElement)) : '';
+            $issueDate = !empty($issueYear) ? "{$issueYear}-01-01" : null; // Default to Jan 1st of the year
 
-            // Extract content for full text
-            $contentPatterns = [
-                '//div[contains(@class, "content")]',
-                '//main',
-                '//article',
-                '//div[contains(@class, "document")]'
-            ];
-            
-            $fullText = '';
-            foreach ($contentPatterns as $pattern) {
-                $contentElement = $xpath->query($pattern)->item(0);
-                if ($contentElement) {
-                    $fullText = $this->cleanText($this->extractText($contentElement));
-                    if (strlen($fullText) > 100 && !stripos($fullText, 'login')) {
-                        break;
-                    }
-                }
-            }
+            // Extract source URL (from the title link)
+            $sourceUrlElement = $xpath->query('//div[@class="strip grid"]//p[not(@style)]/a')->item(0);
+            $sourceUrl = $sourceUrlElement ? $this->extractHref($sourceUrlElement, 'https://peraturan.go.id') : $url;
+
+            // Extract full text content (can be simplified for now, or use a more specific selector if available)
+            // For now, let's combine title and document number as a basic full text
+            $fullText = $title . ' ' . $documentNumberFull;
+
+            // Extract metadata (agency and PDF URL)
+            $agencyElement = $xpath->query('//div[@class="strip grid"]//span[@class="loc_open"]')->item(0);
+            $agency = $agencyElement ? $this->cleanText($this->extractText($agencyElement)) : 'Unknown Agency';
+
+            $pdfUrlElement = $xpath->query('//div[@class="strip grid"]//li/a[img[contains(@src, "pdf")]]')->item(0);
+            $pdfUrl = $pdfUrlElement ? $this->extractHref($pdfUrlElement, 'https://peraturan.go.id') : null;
 
             return [
                 'title' => $title,
                 'document_type' => $documentType,
                 'document_number' => $documentNumber,
-                'issue_date' => now()->format('Y-m-d'), // TODO: Extract real date
-                'source_url' => $url,
+                'issue_date' => $issueDate,
+                'source_url' => $sourceUrl,
                 'metadata' => [
-                    'source_site' => 'Peraturan.go.id (Fixed)',
-                    'extraction_method' => 'category_browse_fixed',
+                    'source_site' => 'Peraturan.go.id',
+                    'agency' => $agency,
+                    'pdf_url' => $pdfUrl,
+                    'extraction_method' => 'puppeteer_fixed',
                     'scraped_at' => now()->toISOString(),
-                    'url_pattern' => 'discovered_structure',
                 ],
-                'full_text' => $fullText ?: substr($title, 0, 500),
+                'full_text' => $fullText,
             ];
 
         } catch (\Exception $e) {
             Log::channel('legal-documents-errors')->error("Fixed Peraturan.go.id: Error extracting data from {$url}: {$e->getMessage()}");
             return null;
         }
+    }
+
+    /**
+     * Scrape with a limit, for compatibility with UnifiedScraperCommand.
+     */
+    public function scrapeWithLimit(int $limit): array
+    {
+        $allResults = $this->scrape(); // Call the existing scrape method
+        return array_slice($allResults, 0, $limit);
     }
 
     /**

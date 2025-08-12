@@ -50,10 +50,10 @@
         </div>
 
         <div class="flex justify-end mt-6">
-            <a href="{{ route('admin.legal-documents.edit', $document->id) }}" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded mr-2">
+            <a href="{{ route('admin.legal-documents.edit', $document) }}" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded mr-2">
                 Edit
             </a>
-            <form action="{{ route('admin.legal-documents.destroy', $document->id) }}" method="POST" class="inline-block">
+            <form action="{{ route('admin.legal-documents.destroy', $document) }}" method="POST" class="inline-block">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onclick="return confirm('Are you sure you want to delete this document?');">

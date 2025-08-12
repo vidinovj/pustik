@@ -56,34 +56,53 @@ abstract class BaseScraper
             $this->respectRateLimit();
             
             // Make request
-            $response = Http::legalDocsScraper()
-                ->timeout($this->timeout)
-                ->withHeaders($this->headers)
-                ->get($url);
+            // Path to the Puppeteer script
+            $puppeteerScriptPath = base_path('storage/app/puppeteer_scraper.cjs');
+
+            // Build the command to execute the Puppeteer script
+            $command = "node {$puppeteerScriptPath} " . escapeshellarg($url);
+
+            // Execute the command
+            // Using shell_exec directly here, as Http::legalDocsScraper() is for Guzzle
+            $processResult = shell_exec($command . ' 2>&1'); // Capture both stdout and stderr
 
             $responseTime = (int)((microtime(true) - $startTime) * 1000);
+
+            // Check for errors from the Puppeteer script
+            if (str_contains($processResult, 'Error scraping')) {
+                ApiLog::logRequest(
+                    $this->source->id,
+                    $url,
+                    'GET',
+                    500, // Indicate internal server error from Puppeteer
+                    $responseTime,
+                    $processResult // Log the error message from Puppeteer
+                );
+                $monitoring = UrlMonitoring::monitor($url);
+                $monitoring->markAsBroken(500, $processResult);
+                Log::channel('legal-documents-errors')->error("Puppeteer scraping failed for {$url}: {$processResult}");
+                return null;
+            }
+
+            // Assuming successful execution, the HTML content is in $processResult
+            $html = $processResult;
+            $statusCode = 200; // Assume 200 OK if Puppeteer returned content without error
 
             // Log the request
             ApiLog::logRequest(
                 $this->source->id,
                 $url,
                 'GET',
-                $response->status(),
+                $statusCode,
                 $responseTime,
-                $response->failed() ? $response->body() : null
+                null // No error message from Puppeteer
             );
 
             // Update URL monitoring
             $monitoring = UrlMonitoring::monitor($url);
+            $monitoring->markAsWorking($statusCode);
             
-            if ($response->successful()) {
-                $monitoring->markAsWorking($response->status());
-                return $response->body();
-            } else {
-                $monitoring->markAsBroken($response->status(), $response->body());
-                Log::channel('legal-documents-errors')->error("Failed to scrape {$url}: HTTP {$response->status()}");
-                return null;
-            }
+            return $html;
 
         } catch (\Exception $e) {
             $responseTime = (int)((microtime(true) - $startTime) * 1000);

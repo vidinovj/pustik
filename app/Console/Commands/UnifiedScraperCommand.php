@@ -161,11 +161,12 @@ class UnifiedScraperCommand extends Command
         $documents = $scraper->scrapeWithLimit($limit);
 
         // Filter for TIK-related content (if not already handled by scraper)
-        $tikDocuments = $this->filterTikDocuments($documents);
+        // $tikDocuments = $this->filterTikDocuments($documents);
         
-        $this->line("   🔍 Filtered: " . count($documents) . " → " . count($tikDocuments) . " TIK-related");
+        // $this->line("   🔍 Filtered: " . count($documents) . " → " . count($tikDocuments) . " TIK-related");
         
-        return $tikDocuments;
+        // return $tikDocuments;
+        return $documents;
     }
 
     protected function filterTikDocuments(array $documents): array

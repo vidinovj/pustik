@@ -2,7 +2,7 @@
 
 namespace App\Services\Scrapers;
 
-use App\Services\Scrapers\KemluTikScraper;
+use App\Services\Scrapers\Enhanced\KemluTikScraper;
 use Illuminate\Support\Facades\Log;
 use DOMDocument;
 

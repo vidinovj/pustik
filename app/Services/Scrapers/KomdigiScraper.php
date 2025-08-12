@@ -2,7 +2,7 @@
 
 namespace App\Services\Scrapers;
 
-use App\Services\Scrapers\KemluTikScraper;
+use App\Services\Scrapers\Enhanced\KemluTikScraper;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use DOMDocument;
@@ -47,6 +47,12 @@ class KomdigiScraper extends KemluTikScraper
         }
         
         return array_slice($documents, 0, $limit);
+    }
+
+    protected function browseRecent(int $limit): array
+    {
+        Log::channel('legal-documents')->info("Komdigi Scraper: Browsing recent documents with limit {$limit}");
+        return $this->browseRecentDocuments($limit); // Call the parent method
     }
 
     protected function searchByCategory(int $limit): array

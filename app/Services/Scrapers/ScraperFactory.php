@@ -4,6 +4,7 @@ namespace App\Services\Scrapers;
 
 use App\Models\DocumentSource;
 use Illuminate\Support\Facades\Log;
+use App\Services\Scrapers\Enhanced\KemluTikScraper;
 
 class ScraperFactory
 {
@@ -13,9 +14,9 @@ class ScraperFactory
     protected static array $scrapers = [
         'peraturan_go_id' => FixedPeraturanScraper::class,
         'peraturan_go_id_session_aware' => SessionAwarePeraturanScraper::class,
-        'jdih_kemlu' => KemluTikScraper::class,
+        'kemlu' => KemluTikScraper::class,
         'jdih_perpusnas_api' => JdihPerpusnasApiScraper::class,
-        'komdigi_jdih' => KomdigiScraper::class,
+        'komdigi' => KomdigiScraper::class,
         'kemenko' => KemenkoScraper::class,
     ];
 

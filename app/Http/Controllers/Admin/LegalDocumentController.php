@@ -14,8 +14,8 @@ class LegalDocumentController extends Controller
      */
     public function index()
     {
-        $documents = LegalDocument::latest()->paginate(10);
-        return view('admin.legal-documents.index', compact('documents'));
+        $legal_documents = LegalDocument::latest()->paginate(10);
+        return view('admin.legal-documents.index', compact('legal_documents'));
     }
 
     /**
@@ -53,29 +53,29 @@ class LegalDocumentController extends Controller
 
         LegalDocument::create($data);
 
-        return redirect()->route('admin.legal-documents.index')->with('success', 'Legal document created successfully.');
+        return to_route('admin.legal-documents.index')->with('success', 'Legal document created successfully.');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(LegalDocument $document)
+    public function show(LegalDocument $legal_document)
     {
-        return view('admin.legal-documents.show', compact('document'));
+        return view('admin.legal-documents.show', ['document' => $legal_document]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(LegalDocument $document)
+    public function edit(LegalDocument $legal_document)
     {
-        return view('admin.legal-documents.edit', compact('document'));
+        return view('admin.legal-documents.edit', ['document' => $legal_document]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, LegalDocument $document)
+    public function update(Request $request, LegalDocument $legal_document)
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
@@ -96,17 +96,17 @@ class LegalDocumentController extends Controller
         $data['metadata'] = json_decode($data['metadata'] ?? '{}', true); // Ensure metadata is an array
         $data['checksum'] = md5($data['title'] . $data['document_type'] . $data['document_number'] . $data['issue_date']);
 
-        $document->update($data);
+        $legal_document->update($data);
 
-        return redirect()->route('admin.legal-documents.index')->with('success', 'Legal document updated successfully.');
+        return to_route('admin.legal-documents.index')->with('success', 'Legal document updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(LegalDocument $document)
+    public function destroy(LegalDocument $legal_document)
     {
-        $document->delete();
-        return redirect()->route('admin.legal-documents.index')->with('success', 'Legal document deleted successfully.');
+        $legal_document->delete();
+        return to_route('admin.legal-documents.index')->with('success', 'Legal document deleted successfully.');
     }
 }

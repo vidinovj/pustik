@@ -16,7 +16,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.legal-documents.update', $document->id) }}" method="POST" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+    <form action="{{ route('admin.legal-documents.update', $document) }}" method="POST" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
         @csrf
         @method('PUT')
 

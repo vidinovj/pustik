@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('document_sources', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('name')->unique();
             $table->enum('type', ['api', 'web_scraping', 'manual']);
             $table->string('base_url')->nullable();

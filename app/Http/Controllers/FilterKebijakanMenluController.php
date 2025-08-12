@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\LegalDocument;
 
+use Illuminate\Support\Facades\Log;
+
 class FilterKebijakanMenluController extends Controller
 {
     /**
@@ -25,7 +27,9 @@ class FilterKebijakanMenluController extends Controller
         ]);
 
         // Start a query builder
-        $query = LegalDocument::where('document_type', 'Kebijakan TIK Kemlu');
+        // Filter for 'Peraturan Menteri' where metadata->agency is 'Kementerian Luar Negeri'
+        $query = LegalDocument::where('document_type', 'Peraturan Menteri')
+                              ->whereJsonContains('metadata->agency', 'Kementerian Luar Negeri');
 
         // Apply filters
         if (!empty($filters['jenis_kebijakan'])) {
@@ -58,7 +62,16 @@ class FilterKebijakanMenluController extends Controller
 
         // Apply sorting
         if (!empty($filters['sort_by']) && !empty($filters['sort_order'])) {
-            $query->orderBy($filters['sort_by'], $filters['sort_order']);
+            $sortByColumn = $filters['sort_by'];
+            Log::info('Original sort_by: ' . $sortByColumn);
+            if ($sortByColumn === 'nomor_kebijakan') {
+                $sortByColumn = 'document_number';
+            } elseif ($sortByColumn === 'tahun_penerbitan') {
+                $sortByColumn = 'issue_date';
+            }
+            Log::info('Mapped sort_by: ' . $sortByColumn);
+            Log::info('Sort order: ' . $filters['sort_order']);
+            $query->orderBy($sortByColumn, $filters['sort_order']);
         }
 
         // Paginate the filtered results
