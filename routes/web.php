@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-
+use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LegalDocumentController;
 use Illuminate\Support\Facades\Route;
@@ -13,23 +13,22 @@ use App\Http\Controllers\HomeControllerAwal;
 // Home route
 Route::get('/', [HomeControllerAwal::class, 'index'])->name('home');
 
-
-
 // Halaman Nota Kesepahaman (MoU) dan PKS
 Route::get('/nkmdp', [FilterMOUMenluController::class, 'index'])->name('nkmdp');
 
 // Halaman Kebijakan TIK by Non Kemlu
 Route::get('/ktbnk', [FilterKebijakanBukanMenluController::class, 'index'])->name('ktbnk');
 
-
-/// Halaman Kebijakan TIK by Kemlu
+// Halaman Kebijakan TIK by Kemlu
 Route::get('/ktbk', [FilterKebijakanMenluController::class, 'index'])->name('ktbk');
 
-
-
- 
-
-
+// Document viewer routes - ADD THESE ROUTES
+Route::prefix('documents')->name('documents.')->group(function () {
+    Route::get('/{document}', [DocumentController::class, 'show'])->name('show');
+    Route::get('/{document}/download', [DocumentController::class, 'download'])->name('download');
+    Route::get('/{document}/content', [DocumentController::class, 'content'])->name('content');
+    Route::get('/{document}/debug', [DocumentController::class, 'debug'])->name('debug');
+});
 
 // Route group untuk admin panel (memerlukan autentikasi)
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
@@ -38,9 +37,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     // CRUD Legal Documents
     Route::resource('legal-documents', LegalDocumentController::class);
-
-    });
-
+});
 
 // Rute untuk profil pengguna
 Route::middleware('auth')->group(function () {

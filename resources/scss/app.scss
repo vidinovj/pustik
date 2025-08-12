@@ -1,0 +1,92 @@
+// resources/scss/app.scss
+
+// Custom color variables to match current theme
+$primary: #3b82f6;          // blue-500
+$primary-hover: #2563eb;    // blue-600
+$secondary: #6b7280;        // gray-500
+$light: #f3f4f6;           // gray-100
+$dark: #374151;            // gray-700
+
+// Override Bootstrap variables
+$theme-colors: (
+  "primary": $primary,
+  "secondary": $secondary,
+  "light": $light,
+  "dark": $dark
+);
+
+// Import Bootstrap
+@import "bootstrap/scss/bootstrap";
+
+// Custom utilities for current design
+.table-custom {
+  .thead-custom {
+    background-color: #e5e7eb; // gray-200
+    color: #6b7280; // gray-600
+  }
+  
+  .tbody-custom {
+    color: #374151; // gray-700
+  }
+}
+
+.btn-filter {
+  background-color: $primary;
+  border-color: $primary;
+  color: white;
+  
+  &:hover {
+    background-color: $primary-hover;
+    border-color: $primary-hover;
+  }
+}
+
+.form-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.link-custom {
+  color: $primary;
+  text-decoration: underline;
+  
+  &:hover {
+    color: $primary-hover;
+  }
+}
+
+// Additional utility classes
+.text-break {
+  word-break: break-word;
+}
+
+// Custom badge colors
+.badge {
+  &.bg-success {
+    background-color: #10b981 !important;
+  }
+  
+  &.bg-danger {
+    background-color: #ef4444 !important;
+  }
+  
+  &.bg-secondary {
+    background-color: #6b7280 !important;
+  }
+}
+
+// Card hover effects
+.card {
+  transition: transform 0.2s ease-in-out;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+// Responsive table improvements
+.table-responsive {
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}

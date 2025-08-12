@@ -1,80 +1,76 @@
+{{-- resources/views/ktbk.blade.php --}}
 <x-layout>
-    <!-- Menampilkan judul halaman -->
     <x-slot:title>Kebijakan TIK by Kemlu</x-slot:title>
 
-    <div class="container mx-auto px-4 py-6 max-w-screen-xl">
+    <div class="container-fluid px-4 py-3">
         <!-- Filter Form -->
-        <form method="GET" action="{{ url('ktbk') }}" class="mb-6 max-w-full mx-auto">
-            <div class="flex space-x-4 mb-4">
-                <!-- Filter Jenis Kebijakan -->
-                <div class="flex-1">
-                    <label for="jenis_kebijakan" class="block text-sm font-medium text-gray-700">Jenis Kebijakan:</label>
+        <form method="GET" action="{{ url('ktbk') }}" class="form-container p-4 mb-4">
+            <!-- First Row - Main Filters -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-2">
+                    <label for="jenis_kebijakan" class="form-label fw-medium text-secondary">Jenis Kebijakan:</label>
                     <input 
                         type="text" 
                         name="jenis_kebijakan" 
                         id="jenis_kebijakan" 
                         value="{{ request('jenis_kebijakan') }}" 
                         placeholder="Jenis Kebijakan" 
-                        class="border p-2 w-full rounded-md">
+                        class="form-control">
                 </div>
 
-                <!-- Filter Nomor Kebijakan -->
-                <div class="flex-1">
-                    <label for="nomor_kebijakan" class="block text-sm font-medium text-gray-700">Nomor Kebijakan:</label>
+                <div class="col-md-2">
+                    <label for="nomor_kebijakan" class="form-label fw-medium text-secondary">Nomor Kebijakan:</label>
                     <input 
                         type="text" 
                         name="nomor_kebijakan" 
                         id="nomor_kebijakan" 
                         value="{{ request('nomor_kebijakan') }}" 
                         placeholder="Nomor Kebijakan" 
-                        class="border p-2 w-full rounded-md">
+                        class="form-control">
                 </div>
 
-                <!-- Filter Tahun Penerbitan (From) -->
-                <div class="flex-1">
-                    <label for="tahun_penerbitan_from" class="block text-sm font-medium text-gray-700">Tahun Penerbitan (From):</label>
+                <div class="col-md-2">
+                    <label for="tahun_penerbitan_from" class="form-label fw-medium text-secondary">Tahun (Dari):</label>
                     <input 
                         type="number" 
                         name="tahun_penerbitan_from" 
                         id="tahun_penerbitan_from" 
                         value="{{ request('tahun_penerbitan_from') }}" 
-                        placeholder="Dari Tahun Penerbitan" 
-                        class="border p-2 w-full rounded-md">
+                        placeholder="Dari Tahun" 
+                        class="form-control">
                 </div>
 
-                <!-- Filter Tahun Penerbitan (To) -->
-                <div class="flex-1">
-                    <label for="tahun_penerbitan_to" class="block text-sm font-medium text-gray-700">Tahun Penerbitan (To):</label>
+                <div class="col-md-2">
+                    <label for="tahun_penerbitan_to" class="form-label fw-medium text-secondary">Tahun (Sampai):</label>
                     <input 
                         type="number" 
                         name="tahun_penerbitan_to" 
                         id="tahun_penerbitan_to" 
                         value="{{ request('tahun_penerbitan_to') }}" 
-                        placeholder="Sampai Tahun Penerbitan" 
-                        class="border p-2 w-full rounded-md">
+                        placeholder="Sampai Tahun" 
+                        class="form-control">
                 </div>
 
-                <!-- Filter Perihal Kebijakan -->
-                <div class="flex-1">
-                    <label for="perihal_kebijakan" class="block text-sm font-medium text-gray-700">Perihal Kebijakan:</label>
+                <div class="col-md-4">
+                    <label for="perihal_kebijakan" class="form-label fw-medium text-secondary">Perihal Kebijakan:</label>
                     <input 
                         type="text" 
                         name="perihal_kebijakan" 
                         id="perihal_kebijakan" 
                         value="{{ request('perihal_kebijakan') }}" 
                         placeholder="Perihal Kebijakan" 
-                        class="border p-2 w-full rounded-md">
+                        class="form-control">
                 </div>
             </div>
 
-            <div class="flex space-x-4 mb-4">
-                <!-- Sort By Dropdown -->
-                <div class="flex-1">
-                    <label for="sort_by" class="block text-sm font-medium text-gray-700">Urutkan Berdasarkan:</label>
+            <!-- Second Row - Sort Options and Submit -->
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="sort_by" class="form-label fw-medium text-secondary">Urutkan Berdasarkan:</label>
                     <select 
                         name="sort_by" 
                         id="sort_by" 
-                        class="border p-2 w-full rounded-md"
+                        class="form-select"
                         onchange="this.form.submit()">
                         <option value="" {{ request('sort_by') == '' ? 'selected' : '' }}>-- Pilih --</option>
                         <option value="tahun_penerbitan" {{ request('sort_by') == 'tahun_penerbitan' ? 'selected' : '' }}>Tahun Penerbitan</option>
@@ -82,71 +78,82 @@
                     </select>
                 </div>
 
-                <!-- Sort Order Dropdown -->
-                <div class="flex-1">
-                    <label for="sort_order" class="block text-sm font-medium text-gray-700">Urutan:</label>
+                <div class="col-md-3">
+                    <label for="sort_order" class="form-label fw-medium text-secondary">Urutan:</label>
                     <select 
                         name="sort_order" 
                         id="sort_order" 
-                        class="border p-2 w-full rounded-md"
+                        class="form-select"
                         onchange="this.form.submit()">
                         <option value="asc" {{ request('sort_order') == 'asc' ? 'selected' : '' }}>Dari bawah ke atas (NAIK)</option>
                         <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>Dari atas ke bawah (TURUN)</option>
                     </select>
                 </div>
 
-                <div class="flex items-end">
+                <div class="col-md-2">
                     <button 
                         type="submit" 
-                        class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">
+                        class="btn btn-filter px-4">
                         Filter
                     </button>
                 </div>
             </div>
         </form>
 
-        <div class="overflow-x-auto max-w-full mx-auto">
-            <table class="w-full bg-white shadow-md rounded-lg overflow-hidden">
-                <thead>
-                    <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                        <th class="py-3 px-6 text-left">Jenis Kebijakan</th>
-                        <th class="py-3 px-6 text-left">Nomor Kebijakan</th>
-                        <th class="py-3 px-6 text-left">Tahun Penerbitan</th>
-                        <th class="py-3 px-6 text-left">Perihal Kebijakan</th>
-                        <th class="py-3 px-6 text-left">Tautan</th>
+        <!-- Results Table -->
+        <div class="table-responsive">
+            <table class="table table-custom table-hover">
+                <thead class="thead-custom">
+                    <tr>
+                        <th scope="col" class="fw-semibold text-uppercase">Jenis Kebijakan</th>
+                        <th scope="col" class="fw-semibold text-uppercase">Nomor Kebijakan</th>
+                        <th scope="col" class="fw-semibold text-uppercase">Tahun Penerbitan</th>
+                        <th scope="col" class="fw-semibold text-uppercase">Perihal Kebijakan</th>
+                        <th scope="col" class="fw-semibold text-uppercase">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="text-gray-700 text-sm font-light">
+                <tbody class="tbody-custom">
                     @forelse($kebijakan as $item)
-                        <tr class="border-b border-gray-200 hover:bg-gray-100">
-                            <td class="py-3 px-6 text-left whitespace-nowrap">{{ $item->document_type }}</td>
-                            <td class="py-3 px-6 text-left">{{ $item->document_number }}</td>
-                            <td class="py-3 px-6 text-left">{{ \Carbon\Carbon::parse($item->issue_date)->year }}</td>
-                            <td class="py-3 px-6 text-left break-words">{{ $item->title }}</td>
-                            <td class="py-3 px-6 text-left">
-                                @if ($item->source_url)
-                                    <a 
-                                        href="{{ $item->source_url }}" 
-                                        target="_blank" 
-                                        class="text-blue-500 underline">
-                                        Lihat Tautan
-                                    </a>
+                        <tr>
+                            <td class="text-nowrap">{{ $item->document_type }}</td>
+                            <td>{{ $item->document_number }}</td>
+                            <td>{{ \Carbon\Carbon::parse($item->issue_date)->year }}</td>
+                            <td class="text-break">{{ $item->title }}</td>
+                            <td>
+                                @if ($item->source_url || $item->full_text)
+                                    <div class="btn-group" role="group">
+                                        <a 
+                                            href="{{ route('documents.show', $item) }}" 
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i>
+                                            Lihat
+                                        </a>
+                                        <button 
+                                            type="button" 
+                                            class="btn btn-sm btn-outline-secondary btn-quick-view"
+                                            data-document-id="{{ $item->id }}"
+                                            data-document-url="{{ route('documents.show', $item) }}"
+                                            title="Pratinjau Cepat">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
                                 @else
-                                    <span class="text-gray-500">Tidak ada tautan</span>
+                                    <span class="text-muted">Tidak tersedia</span>
                                 @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-4">Data kebijakan tidak tersedia.</td>
+                            <td colspan="5" class="text-center py-4 text-muted">Data kebijakan tidak tersedia.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
+        <!-- Pagination -->
         <div class="mt-4">
-            {{ $kebijakan->appends(request()->all())->links('pagination::tailwind') }}
+            {{ $kebijakan->appends(request()->all())->links('pagination.bootstrap') }}
         </div>
     </div>
 </x-layout>

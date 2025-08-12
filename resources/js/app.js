@@ -1,7 +1,8 @@
+// resources/js/app.js
 import './bootstrap';
 
-import Alpine from 'alpinejs';
+// Import Bootstrap JavaScript
+import * as bootstrap from 'bootstrap';
 
-window.Alpine = Alpine;
-
-Alpine.start();
+// Make Bootstrap available globally
+window.bootstrap = bootstrap;

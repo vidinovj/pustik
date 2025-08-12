@@ -1,58 +1,109 @@
+{{-- resources/views/nkmdp.blade.php --}}
 <x-layout>
     <x-slot:title>{{ $title }}</x-slot:title>
 
-    <div class="container mx-auto px-4 py-8">
-        <!-- Page Title -->
-
+    <div class="container-fluid px-4 py-3">
         <!-- Filter Form -->
-        <form method="GET" action="{{ url('nkmdp') }}" class="bg-white shadow rounded-lg p-6 mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <!-- Filter Inputs with Labels -->
-                <div>
-                    <label for="jenis_dokumen" class="block text-sm font-medium text-gray-700 mb-1">Jenis Dokumen</label>
-                    <input type="text" id="jenis_dokumen" name="jenis_dokumen" value="{{ request('jenis_dokumen') }}" placeholder="Jenis Dokumen" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200">
+        <form method="GET" action="{{ url('nkmdp') }}" class="form-container p-4 mb-4">
+            <!-- First Row - Document & Related Info -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label for="jenis_dokumen" class="form-label fw-medium text-secondary">Jenis Dokumen</label>
+                    <input 
+                        type="text" 
+                        id="jenis_dokumen" 
+                        name="jenis_dokumen" 
+                        value="{{ request('jenis_dokumen') }}" 
+                        placeholder="Jenis Dokumen" 
+                        class="form-control">
                 </div>
 
-                <div>
-                    <label for="perihal_dokumen" class="block text-sm font-medium text-gray-700 mb-1">Perihal Dokumen</label>
-                    <input type="text" id="perihal_dokumen" name="perihal_dokumen" value="{{ request('perihal_dokumen') }}" placeholder="Perihal Dokumen" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200">
+                <div class="col-md-3">
+                    <label for="perihal_dokumen" class="form-label fw-medium text-secondary">Perihal Dokumen</label>
+                    <input 
+                        type="text" 
+                        id="perihal_dokumen" 
+                        name="perihal_dokumen" 
+                        value="{{ request('perihal_dokumen') }}" 
+                        placeholder="Perihal Dokumen" 
+                        class="form-control">
                 </div>
 
-                <div>
-                    <label for="satker_kemlu_terkait" class="block text-sm font-medium text-gray-700 mb-1">Satker Kemlu Terkait</label>
-                    <input type="text" id="satker_kemlu_terkait" name="satker_kemlu_terkait" value="{{ request('satker_kemlu_terkait') }}" placeholder="Satker Kemlu Terkait" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200">
+                <div class="col-md-3">
+                    <label for="satker_kemlu_terkait" class="form-label fw-medium text-secondary">Satker Kemlu Terkait</label>
+                    <input 
+                        type="text" 
+                        id="satker_kemlu_terkait" 
+                        name="satker_kemlu_terkait" 
+                        value="{{ request('satker_kemlu_terkait') }}" 
+                        placeholder="Satker Kemlu Terkait" 
+                        class="form-control">
                 </div>
 
-                <div>
-                    <label for="kl_external_terkait" class="block text-sm font-medium text-gray-700 mb-1">K/L/I External Terkait</label>
-                    <input type="text" id="kl_external_terkait" name="kl_external_terkait" value="{{ request('kl_external_terkait') }}" placeholder="K/L/I External Terkait" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200">
+                <div class="col-md-3">
+                    <label for="kl_external_terkait" class="form-label fw-medium text-secondary">K/L/I External Terkait</label>
+                    <input 
+                        type="text" 
+                        id="kl_external_terkait" 
+                        name="kl_external_terkait" 
+                        value="{{ request('kl_external_terkait') }}" 
+                        placeholder="K/L/I External Terkait" 
+                        class="form-control">
+                </div>
+            </div>
+
+            <!-- Second Row - Date Ranges -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label for="start_date_disahkan" class="form-label fw-medium text-secondary">Tanggal Disahkan (Awal)</label>
+                    <input 
+                        type="date" 
+                        id="start_date_disahkan" 
+                        name="start_date_disahkan" 
+                        value="{{ request('start_date_disahkan') }}" 
+                        class="form-control">
                 </div>
 
-                <!-- Date Range Filters -->
-                <div>
-                    <label for="start_date_disahkan" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Disahkan (Awal)</label>
-                    <input type="date" id="start_date_disahkan" name="start_date_disahkan" value="{{ request('start_date_disahkan') }}" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200">
+                <div class="col-md-3">
+                    <label for="end_date_disahkan" class="form-label fw-medium text-secondary">Tanggal Disahkan (Akhir)</label>
+                    <input 
+                        type="date" 
+                        id="end_date_disahkan" 
+                        name="end_date_disahkan" 
+                        value="{{ request('end_date_disahkan') }}" 
+                        class="form-control">
                 </div>
 
-                <div>
-                    <label for="end_date_disahkan" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Disahkan (Akhir)</label>
-                    <input type="date" id="end_date_disahkan" name="end_date_disahkan" value="{{ request('end_date_disahkan') }}" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200">
+                <div class="col-md-3">
+                    <label for="start_date_berakhir" class="form-label fw-medium text-secondary">Tanggal Berakhir (Awal)</label>
+                    <input 
+                        type="date" 
+                        id="start_date_berakhir" 
+                        name="start_date_berakhir" 
+                        value="{{ request('start_date_berakhir') }}" 
+                        class="form-control">
                 </div>
 
-                <div>
-                    <label for="start_date_berakhir" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Berakhir (Awal)</label>
-                    <input type="date" id="start_date_berakhir" name="start_date_berakhir" value="{{ request('start_date_berakhir') }}" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200">
+                <div class="col-md-3">
+                    <label for="end_date_berakhir" class="form-label fw-medium text-secondary">Tanggal Berakhir (Akhir)</label>
+                    <input 
+                        type="date" 
+                        id="end_date_berakhir" 
+                        name="end_date_berakhir" 
+                        value="{{ request('end_date_berakhir') }}" 
+                        class="form-control">
                 </div>
+            </div>
 
-                <div>
-                    <label for="end_date_berakhir" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Berakhir (Akhir)</label>
-                    <input type="date" id="end_date_berakhir" name="end_date_berakhir" value="{{ request('end_date_berakhir') }}" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200">
-                </div>
-
-                <!-- Sorting Options -->
-                <div>
-                    <label for="sort_by" class="block text-sm font-medium text-gray-700 mb-1">Sortir Berdasarkan</label>
-                    <select id="sort_by" name="sort_by" class="border border-gray-300 rounded p-2 w-full focus:ring focus:ring-blue-200" onchange="this.form.submit()">
+            <!-- Third Row - Sorting and Submit -->
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="sort_by" class="form-label fw-medium text-secondary">Sortir Berdasarkan</label>
+                    <select 
+                        id="sort_by" 
+                        name="sort_by" 
+                        class="form-select" 
+                        onchange="this.form.submit()">
                         <option value="" disabled selected>Pilih</option>
                         <option value="tanggal_disahkan_asc" {{ request('sort_by') == 'tanggal_disahkan_asc' ? 'selected' : '' }}>Tanggal Disahkan (Terbaru)</option>
                         <option value="tanggal_disahkan_desc" {{ request('sort_by') == 'tanggal_disahkan_desc' ? 'selected' : '' }}>Tanggal Disahkan (Terlama)</option>
@@ -60,46 +111,90 @@
                         <option value="tanggal_berakhir_desc" {{ request('sort_by') == 'tanggal_berakhir_desc' ? 'selected' : '' }}>Tanggal Berakhir (Terlama)</option>
                     </select>
                 </div>
-            </div>
 
-            <!-- Submit Button -->
-            <div class="mt-6 text-right">
-                <button type="submit" class="bg-blue-500 text-white rounded px-4 py-2 hover:bg-blue-600">Filter & Sortir</button>
+                <div class="col-md-3">
+                    <button 
+                        type="submit" 
+                        class="btn btn-filter px-4">
+                        Filter & Sortir
+                    </button>
+                </div>
             </div>
         </form>
 
-        <!-- Table with Filtered Data -->
-        <div class="overflow-x-auto bg-white shadow rounded-lg">
-            <table class="w-full table-auto border-collapse">
-                <thead>
-                    <tr class="bg-gray-100 text-gray-600 text-sm uppercase text-left">
-                        <th class="py-3 px-4">No</th>
-                        <th class="py-3 px-4">MoU/PKS</th>
-                        <th class="py-3 px-4">Perihal Dokumen</th>
-                        <th class="py-3 px-4">Satker Kemlu Terkait</th>
-                        <th class="py-3 px-4">K/L/I External Terkait</th>
-                        <th class="py-3 px-4">Tanggal Disahkan</th>
-                        <th class="py-3 px-4">Tanggal Berakhir</th>
-                        <th class="py-3 px-4">Status</th>
-                        <th class="py-3 px-4">Keterangan</th>
+        <!-- Results Table -->
+        <div class="table-responsive">
+            <table class="table table-custom table-hover">
+                <thead class="thead-custom">
+                    <tr>
+                        <th scope="col" class="fw-semibold text-uppercase">No</th>
+                        <th scope="col" class="fw-semibold text-uppercase">MoU/PKS</th>
+                        <th scope="col" class="fw-semibold text-uppercase">Perihal Dokumen</th>
+                        <th scope="col" class="fw-semibold text-uppercase">Satker Kemlu Terkait</th>
+                        <th scope="col" class="fw-semibold text-uppercase">K/L/I External Terkait</th>
+                        <th scope="col" class="fw-semibold text-uppercase">Tanggal Disahkan</th>
+                        <th scope="col" class="fw-semibold text-uppercase">Tanggal Berakhir</th>
+                        <th scope="col" class="fw-semibold text-uppercase">Status</th>
+                        <th scope="col" class="fw-semibold text-uppercase">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="text-gray-700 text-sm">
+                <tbody class="tbody-custom">
                     @forelse($notaKesepahaman as $index => $nota)
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="py-3 px-4">{{ $index + 1 }}</td>
-                            <td class="py-3 px-4">{{ $nota->document_type }}</td>
-                            <td class="py-3 px-4 break-words">{{ $nota->title }}</td>
-                            <td class="py-3 px-4">{{ $nota->metadata['satker_kemlu_terkait'] ?? '' }}</td>
-                            <td class="py-3 px-4">{{ $nota->metadata['kl_external_terkait'] ?? '' }}</td>
-                            <td class="py-3 px-4">{{ \Carbon\Carbon::parse($nota->issue_date)->format('d-m-Y') }}</td>
-                            <td class="py-3 px-4">{{ \Carbon\Carbon::parse($nota->metadata['tanggal_berakhir'])->format('d-m-Y') ?? '' }}</td>
-                            <td class="py-3 px-4">{{ $nota->status }}</td>
-                            <td class="py-3 px-4">{{ $nota->keterangan }}</td>
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $nota->document_type }}</td>
+                            <td class="text-break">{{ $nota->title }}</td>
+                            <td>{{ $nota->metadata['satker_kemlu_terkait'] ?? '' }}</td>
+                            <td>{{ $nota->metadata['kl_external_terkait'] ?? '' }}</td>
+                            <td>{{ \Carbon\Carbon::parse($nota->issue_date)->format('d-m-Y') }}</td>
+                            <td>
+                                @if(isset($nota->metadata['tanggal_berakhir']))
+                                    {{ \Carbon\Carbon::parse($nota->metadata['tanggal_berakhir'])->format('d-m-Y') }}
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if(isset($nota->metadata['tanggal_berakhir']))
+                                    @php
+                                        $tanggalBerakhir = \Carbon\Carbon::parse($nota->metadata['tanggal_berakhir']);
+                                        $sekarang = \Carbon\Carbon::now();
+                                    @endphp
+                                    @if($tanggalBerakhir->isFuture())
+                                        <span class="badge bg-success">Aktif</span>
+                                    @else
+                                        <span class="badge bg-danger">Berakhir</span>
+                                    @endif
+                                @else
+                                    <span class="badge bg-secondary">Tidak Diketahui</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($nota->source_url || $nota->full_text)
+                                    <div class="btn-group" role="group">
+                                        <a 
+                                            href="{{ route('documents.show', $nota) }}" 
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i>
+                                            Lihat
+                                        </a>
+                                        <button 
+                                            type="button" 
+                                            class="btn btn-sm btn-outline-secondary btn-quick-view"
+                                            data-document-id="{{ $nota->id }}"
+                                            data-document-url="{{ route('documents.show', $nota) }}"
+                                            title="Pratinjau Cepat">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                @else
+                                    <span class="text-muted">Tidak tersedia</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="py-4 px-4 text-center text-gray-500">Tidak ada data yang ditemukan.</td>
+                            <td colspan="9" class="text-center py-4 text-muted">Tidak ada data yang ditemukan.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -107,8 +202,8 @@
         </div>
 
         <!-- Pagination -->
-        <div class="mt-6">
-            {{ $notaKesepahaman->links('pagination::tailwind') }}
+        <div class="mt-4">
+            {{ $notaKesepahaman->links('pagination.bootstrap') }}
         </div>
     </div>
 </x-layout>
