@@ -22,11 +22,16 @@ class LegalDocument extends Model
         'document_source_id',
         'status',
         'checksum',
+        'tik_relevance_score',
+        'tik_keywords',
+        'is_tik_related',
+        'document_category',
     ];
 
     protected $casts = [
         'metadata' => 'array',
         'issue_date' => 'date',
+        'tik_keywords' => 'array',
     ];
 
     /**

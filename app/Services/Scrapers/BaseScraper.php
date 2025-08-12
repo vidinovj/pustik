@@ -279,6 +279,8 @@ abstract class BaseScraper
         return trim($text);
     }
 
+    
+
     /**
      * Parse Indonesian date formats.
      */
