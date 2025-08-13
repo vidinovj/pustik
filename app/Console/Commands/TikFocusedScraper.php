@@ -469,7 +469,7 @@ class TikFocusedScraper extends Command
         $normalized['agency'] = $scrapedData['source'] ?? null; // Use 'source' as agency
         $normalized['summary'] = $scrapedData['title'] ?? null; // Use title as summary
         $normalized['keywords'] = $scrapedData['tik_keywords'] ?? []; // Use tik_keywords
-        $normalized['extraction_method'] = $scrapedData['extraction_method'] ?? 'tik_focused_scraper';
+        $normalized['extraction_method'] = 'tik_focused_scraper';
         $normalized['entry_date'] = now()->toISOString(); // Set entry date
 
         // Ensure keywords is always an array
