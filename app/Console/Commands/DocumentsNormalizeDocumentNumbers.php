@@ -71,7 +71,7 @@ class DocumentsNormalizeDocumentNumbers extends Command
     {
         $textToParse = $document->document_number;
         if (empty($textToParse) || Str::length($textToParse) > 50) { // If number is empty or looks like a title
-            $textToParse = $document->title;
+            $textToParse = $document->source_url;
         }
 
         $textToParseLower = Str::lower($textToParse);

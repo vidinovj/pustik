@@ -158,7 +158,11 @@ class UnifiedScraperCommand extends Command
             return [];
         }
 
-        $documents = $scraper->scrapeWithLimit($limit);
+        $documents = $scraper->scrape();
+
+        if ($limit > 0) {
+            $documents = array_slice($documents, 0, $limit);
+        }
 
         // Filter for TIK-related content (if not already handled by scraper)
         // $tikDocuments = $this->filterTikDocuments($documents);
