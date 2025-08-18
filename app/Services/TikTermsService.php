@@ -68,7 +68,6 @@ class TikTermsService
         // Artificial Intelligence & Modern Tech
         'artificial intelligence' => 8,
         'machine learning' => 7,
-        'ai' => 5,
         'kecerdasan buatan' => 8,
         'robot' => 6,
         'otomasi' => 6,
@@ -139,7 +138,6 @@ class TikTermsService
         'elektronik' => 6,
         'teknologi' => 5,
         'technology' => 5,
-        'it' => 5,
         'tic' => 5,
         'tik' => 5,
     ];

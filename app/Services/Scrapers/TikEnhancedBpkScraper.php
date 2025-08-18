@@ -23,46 +23,50 @@ class TikEnhancedBpkScraper extends BaseScraper
 
     // TIK-focused search queries for BPK
     private array $tikSearchQueries = [
-        // High Priority IT Laws
+        // Core TIK Laws
         'undang-undang informasi transaksi elektronik',
         'UU ITE 11 2008',
-        'UU data pribadi 27 2022',
-        'undang-undang perlindungan data pribadi',
+        'undang-undang data pribadi',
+        'UU 27 2022',
+        'perlindungan data pribadi',
         
-        // Government IT Systems
+        // Digital Government
         'sistem pemerintahan berbasis elektronik',
         'SPBE',
-        'e-government',
-        'pemerintahan digital',
         'transformasi digital',
+        'layanan digital nasional',
+        'satu data indonesia',
         
-        // Cybersecurity & Digital Security
+        // Security & Privacy
         'keamanan siber',
+        'insiden siber',
         'cyber security',
-        'keamanan informasi',
-        'sistem keamanan elektronik',
+        'manajemen krisis siber',
         
-        // Digital Economy & Fintech
+        // E-commerce & Fintech
         'perdagangan melalui sistem elektronik',
+        'PMSE',
         'e-commerce',
-        'ekonomi digital',
+        'teknologi finansial',
         'fintech',
-        'financial technology',
         'pembayaran digital',
         
-        // Communication & Infrastructure
+        // Digital Infrastructure
+        'tanda tangan elektronik',
+        'sertifikat elektronik',
         'telekomunikasi',
-        'komunikasi informatika',
-        'kominfo',
-        'infrastruktur digital',
-        'teknologi informasi komunikasi',
+        'digitalisasi daerah',
         
-        // Recent TIK Years
+        // Recent years for discovery
         'teknologi informasi 2024',
-        'teknologi informasi 2023',
         'sistem elektronik 2024',
-        'digital 2024',
-        'informatika 2024'
+        'digital 2023',
+        'informasi 2023',
+        
+        // Relationship queries for regulatory cascade
+        'mencabut peraturan',
+        'perubahan atas',
+        'melaksanakan ketentuan'
     ];
 
     public function __construct(DocumentSource $source)
@@ -196,9 +200,9 @@ class TikEnhancedBpkScraper extends BaseScraper
             sleep(2);
             
             // Limit queries if we have enough URLs
-            if (count($urls) > 100) {
-                break;
-            }
+            // if (count($urls) > 100) {
+            //     break;
+            // }
         }
         
         return array_unique($urls);

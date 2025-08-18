@@ -24,7 +24,11 @@ class FilterKebijakanBukanMenluController extends Controller
             'Peraturan Pemerintah',
             'Peraturan Presiden',
             'Peraturan Menteri'
-        ])->whereJsonDoesntContain('metadata->agency', 'Kementerian Luar Negeri');
+        ])
+        ->where(function ($q) {
+            $q->whereJsonDoesntContain('metadata->agency', 'Kementerian Luar Negeri')
+              ->orWhereNull('metadata->agency');
+        });
 
         if (!empty($filters['jenis_kebijakan'])) {
             // This filter is now handled by the initial where clause on document_type

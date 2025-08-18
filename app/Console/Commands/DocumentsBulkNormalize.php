@@ -1,4 +1,5 @@
 <?php
+// app/Console/Commands/DocumentsBulkNormalize.php
 
 namespace App\Console\Commands;
 
@@ -7,23 +8,9 @@ use Illuminate\Support\Facades\Artisan;
 
 class DocumentsBulkNormalize extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'documents:bulk-normalize {--dry-run : Show what would be changed without saving} {--force : Force update for TIK scores}';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Run all document normalization commands in sequence.';
 
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
         $isDryRun = $this->option('dry-run');
@@ -59,6 +46,11 @@ class DocumentsBulkNormalize extends Command
             $tikScoreOptions['--force'] = true;
         }
         Artisan::call('documents:update-tik-scores', $tikScoreOptions, $this->output);
+        $this->newLine();
+
+        // 5. Fix TIK Column Sync (NEW)
+        $this->info('🔄 Running documents:fix-tik-column-sync...');
+        Artisan::call('documents:fix-tik-column-sync', $options, $this->output);
         $this->newLine();
 
         $this->info('✅ Bulk Document Normalization Completed!');

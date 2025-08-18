@@ -169,7 +169,7 @@
 
         <!-- Pagination -->
         <div class="mt-4">
-            {{ $kebijakan->links('pagination.bootstrap') }}
+            {{ $kebijakan->appends(request()->all())->links('pagination.bootstrap') }}
         </div>
     </div>
 </x-layout>

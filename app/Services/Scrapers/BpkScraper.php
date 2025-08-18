@@ -14,7 +14,7 @@ class BpkScraper extends BaseScraper
     private EnhancedDocumentScraper $enhancedScraper;
     private array $testUrls = [
         'https://peraturan.bpk.go.id/Details/274494/uu-no-11-tahun-2008',
-        'https://peraturan.bpk.go.id/Details/37582/uu-no-19-tahun-2016', 
+        'https://peraturan.bpk.go.id/Details/37582/uu-no-19-tahun-2016',
         'https://peraturan.bpk.go.id/Details/229798/uu-no-27-tahun-2022',
     ];
 
@@ -68,11 +68,7 @@ class BpkScraper extends BaseScraper
             Log::channel('legal-documents')->info("BPK Scraper selected strategy: {$bestStrategy}");
             
             // Discover document URLs from multiple sources
-            $documentUrls = array_merge(
-                $this->getUrlsFromSearch(),
-                $this->getUrlsFromCategories(),
-                $this->getUrlsFromRecentUpdates()
-            );
+            $documentUrls = $this->getUrlsFromSearch();
             
             // Remove duplicates and prioritize
             $documentUrls = $this->deduplicateAndPrioritize($documentUrls);
@@ -136,16 +132,56 @@ class BpkScraper extends BaseScraper
 
     /**
      * Search BPK for documents and extract detail URLs
+     * Updated with 6.2 expanded query strategy
      */
     private function getUrlsFromSearch(): array
     {
+        // 6.2.1 High-priority keyword and acronym queries
         $searchQueries = [
+            // Core TIK Laws
             'undang-undang informasi transaksi elektronik',
-            'peraturan pemerintah sistem elektronik',
+            'UU ITE 11 2008',
             'undang-undang data pribadi',
-            'peraturan presiden tik',
-            'undang-undang 2024',
-            'undang-undang 2023'
+            'UU 27 2022',
+            'perlindungan data pribadi',
+            
+            // Digital Government
+            'sistem pemerintahan berbasis elektronik',
+            'SPBE',
+            'transformasi digital',
+            'layanan digital nasional',
+            'satu data indonesia',
+            
+            // Security & Privacy
+            'keamanan siber',
+            'insiden siber',
+            'cyber security',
+            'manajemen krisis siber',
+            
+            // E-commerce & Fintech
+            'perdagangan melalui sistem elektronik',
+            'PMSE',
+            'e-commerce',
+            'teknologi finansial',
+            'fintech',
+            'pembayaran digital',
+            
+            // Digital Infrastructure
+            'tanda tangan elektronik',
+            'sertifikat elektronik',
+            'telekomunikasi',
+            'digitalisasi daerah',
+            
+            // Recent years for discovery
+            'teknologi informasi 2024',
+            'sistem elektronik 2024',
+            'digital 2023',
+            'informasi 2023',
+            
+            // Relationship queries for regulatory cascade
+            'mencabut peraturan',
+            'perubahan atas',
+            'melaksanakan ketentuan'
         ];
         
         $urls = [];
@@ -156,8 +192,14 @@ class BpkScraper extends BaseScraper
             
             // Rate limiting
             sleep(2);
+            
+            // Progress logging
+            if (count($searchUrls) > 0) {
+                Log::channel('legal-documents')->info("BPK search '{$query}' found " . count($searchUrls) . " URLs");
+            }
         }
         
+        Log::channel('legal-documents')->info("BPK getUrlsFromSearch found " . count(array_unique($urls)) . " total URLs");
         return array_unique($urls);
     }
 
@@ -181,6 +223,7 @@ class BpkScraper extends BaseScraper
                 return [];
             }
             
+            file_put_contents('bpk_search_results.html', $response->body());
             return $this->extractDetailUrlsFromSearchResults($response->body());
             
         } catch (\Exception $e) {
@@ -225,14 +268,34 @@ class BpkScraper extends BaseScraper
 
     /**
      * Get URLs from BPK category pages
+     * Updated with 6.2.2 issuing body and theme approach
      */
     private function getUrlsFromCategories(): array
     {
+        // 6.2.3 Document type and year discovery + 6.2.2 issuing body themes
         $categoryUrls = [
+            // Recent laws by type
             'https://peraturan.bpk.go.id/search?jenis=uu&tahun=2024',
             'https://peraturan.bpk.go.id/search?jenis=uu&tahun=2023',
             'https://peraturan.bpk.go.id/search?jenis=pp&tahun=2024',
+            'https://peraturan.bpk.go.id/search?jenis=pp&tahun=2023',
             'https://peraturan.bpk.go.id/search?jenis=perpres&tahun=2024',
+            'https://peraturan.bpk.go.id/search?jenis=perpres&tahun=2023',
+            
+            // TIK-specific categories
+            'https://peraturan.bpk.go.id/search?jenis=uu&q=informasi',
+            'https://peraturan.bpk.go.id/search?jenis=uu&q=elektronik',
+            'https://peraturan.bpk.go.id/search?jenis=uu&q=digital',
+            'https://peraturan.bpk.go.id/search?jenis=pp&q=sistem',
+            'https://peraturan.bpk.go.id/search?jenis=pp&q=teknologi',
+            'https://peraturan.bpk.go.id/search?jenis=perpres&q=cyber',
+            
+            // Issuing body focused searches  
+            'https://peraturan.bpk.go.id/search?q=kominfo',
+            'https://peraturan.bpk.go.id/search?q=komdigi',
+            'https://peraturan.bpk.go.id/search?q=BSSN',
+            'https://peraturan.bpk.go.id/search?q=OJK+fintech',
+            'https://peraturan.bpk.go.id/search?q=bank+indonesia+digital'
         ];
         
         $urls = [];
@@ -243,6 +306,8 @@ class BpkScraper extends BaseScraper
                 if ($response->successful()) {
                     $categoryUrls = $this->extractDetailUrlsFromSearchResults($response->body());
                     $urls = array_merge($urls, $categoryUrls);
+                    
+                    Log::channel('legal-documents')->info("BPK category '{$categoryUrl}' found " . count($categoryUrls) . " URLs");
                 }
                 sleep(2); // Rate limiting
             } catch (\Exception $e) {
@@ -250,6 +315,7 @@ class BpkScraper extends BaseScraper
             }
         }
         
+        Log::channel('legal-documents')->info("BPK getUrlsFromCategories found " . count(array_unique($urls)) . " total URLs");
         return array_unique($urls);
     }
 
@@ -286,21 +352,7 @@ class BpkScraper extends BaseScraper
     /**
      * Check if URL is a valid BPK detail URL
      */
-    private function isValidBpkDetailUrl(string $url): bool
-    {
-        $patterns = [
-            '/peraturan\.bpk\.go\.id\/Details\/\d+\/[a-z]+-no-\d+/',
-            '/peraturan\.bpk\.go\.id\/Home\/Details\/\d+/',
-        ];
-        
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $url)) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
+
 
     /**
      * Normalize URL to absolute format
@@ -324,7 +376,7 @@ class BpkScraper extends BaseScraper
     private function enrichBpkData(array $data, string $url): array
     {
         // Extract BPK ID from URL
-        if (preg_match('/\/Details\/(\d+)\//', $url, $matches)) {
+        if (preg_match('#/Details/(\d+)/#', $url, $matches)) {
             $data['bpk_id'] = $matches[1];
         }
         
@@ -351,7 +403,7 @@ class BpkScraper extends BaseScraper
         $regular = [];
         
         foreach ($urls as $url) {
-            if (preg_match('/(2024|2023|uu-no|undang-undang)/', $url)) {
+            if (preg_match('#(2024|2023|uu-no|undang-undang)#', $url)) {
                 $prioritized[] = $url;
             } else {
                 $regular[] = $url;
