@@ -9,15 +9,19 @@ use Illuminate\Support\Str;
 
 class NormalizeDocumentColumns extends Command
 {
-    protected $signature = 'documents:normalize-columns {--dry-run : Show what would be changed without saving}';
+    protected $signature = 'documents:normalize-columns {--dry-run : Show what would be changed without saving} {--force : Force normalization on all documents}';
     protected $description = 'Normalize legal document column data and populate missing fields';
 
     public function handle()
     {
         $isDryRun = $this->option('dry-run');
-        
+        $isForce = $this->option('force');
+
         if ($isDryRun) {
             $this->info('🔍 DRY RUN MODE - No changes will be saved');
+        }
+        if ($isForce) {
+            $this->info('💪 FORCE MODE - Forcing normalization on all documents');
         }
 
         $documents = LegalDocument::all();
@@ -25,6 +29,7 @@ class NormalizeDocumentColumns extends Command
         
         $stats = [
             'document_type_fixed' => 0,
+            'document_type_processed' => 0,
             'status_added' => 0,
             'checksum_generated' => 0,
             'source_id_generated' => 0,
@@ -37,15 +42,33 @@ class NormalizeDocumentColumns extends Command
             $hasChanges = false;
 
             // 1. Standardize document_type
-            if ($this->needsDocumentTypeNormalization($document)) {
+            if ($isForce || $this->needsDocumentTypeNormalization($document)) {
                 $oldType = $document->document_type;
                 $newType = $this->normalizeDocumentType($document);
-                $changes['document_type'] = ['from' => $oldType, 'to' => $newType];
-                $stats['document_type_fixed']++;
-                $hasChanges = true;
-                
-                if (!$isDryRun) {
-                    $document->document_type = $newType;
+
+                if ($isForce) {
+                    // In force mode, always show the normalization result
+                    $changes['document_type'] = ['from' => $oldType, 'to' => $newType];
+                    $stats['document_type_processed']++;
+                    $hasChanges = true;
+                    
+                    if ($oldType !== $newType) {
+                        $stats['document_type_fixed']++;
+                    }
+                    
+                    if (!$isDryRun) {
+                        $document->document_type = $newType;
+                    }
+                } elseif ($oldType !== $newType) {
+                    // Normal mode, only record actual changes
+                    $changes['document_type'] = ['from' => $oldType, 'to' => $newType];
+                    $stats['document_type_fixed']++;
+                    $stats['document_type_processed']++;
+                    $hasChanges = true;
+                    
+                    if (!$isDryRun) {
+                        $document->document_type = $newType;
+                    }
                 }
             }
 
@@ -97,7 +120,7 @@ class NormalizeDocumentColumns extends Command
 
             // Display and save changes
             if ($hasChanges) {
-                $this->displayDocumentChanges($document, $changes, $isDryRun);
+                $this->displayDocumentChanges($document, $changes, $isDryRun, $isForce);
                 
                 if (!$isDryRun) {
                     $document->save();
@@ -106,15 +129,15 @@ class NormalizeDocumentColumns extends Command
             }
         }
 
-        $this->displayStats($stats, $isDryRun);
+        $this->displayStats($stats, $isDryRun, $isForce);
     }
 
     private function needsDocumentTypeNormalization(LegalDocument $document): bool
     {
         $type = $document->document_type;
         
-        // Check for abbreviations that need expansion
-        return in_array($type, ['UU', 'PP', 'Perpres', 'Permen']) || 
+        // Check for abbreviations that need expansion, incorrect casing, or unknown types
+        return in_array($type, ['UU', 'PP', 'Perpres', 'Permen', 'Undang-Undang', 'uu', 'Unknown Document Type', 'Unknown']) ||
                (empty($type) && $this->canInferDocumentType($document));
     }
 
@@ -128,15 +151,16 @@ class NormalizeDocumentColumns extends Command
             'PP' => 'Peraturan Pemerintah', 
             'Perpres' => 'Peraturan Presiden',
             'Permen' => 'Peraturan Menteri',
-            'uu' => 'Undang-undang'
+            'uu' => 'Undang-undang',
+            'Undang-Undang' => 'Undang-undang'
         ];
 
         if (isset($typeMapping[$currentType])) {
             return $typeMapping[$currentType];
         }
 
-        // If empty, infer from title or document_number
-        if (empty($currentType)) {
+        // If empty or unknown, infer from title, document_number, or URL
+        if (empty($currentType) || $currentType === 'Unknown Document Type' || $currentType === 'Unknown') {
             return $this->inferDocumentType($document);
         }
 
@@ -145,6 +169,17 @@ class NormalizeDocumentColumns extends Command
 
     private function canInferDocumentType(LegalDocument $document): bool
     {
+        // Check URL patterns first
+        if (!empty($document->source_url)) {
+            $urlString = strtolower($document->source_url);
+            
+            // URL contains clear document type indicators
+            if (preg_match('/\/(uu|pp|perpres|permen|permendagri|permenkumham|permendikbud|permendikbudriset|permenkes|permenkeu|permentan|permenhub|permenpan|permenlu|permendesa|permenpera|permensos|permenlhk|permenristekdikti|permenedag|permenperin|permenkominfo|permenkopukm|permenpopar|permenjamsos|permenaker|permentrans)/i', $urlString)) {
+                return true;
+            }
+        }
+        
+        // Check title and document_number
         $text = strtolower($document->title . ' ' . $document->document_number);
         $indicators = ['undang-undang', 'peraturan pemerintah', 'peraturan presiden', 'peraturan menteri'];
         
@@ -159,30 +194,52 @@ class NormalizeDocumentColumns extends Command
 
     private function inferDocumentType(LegalDocument $document): string
     {
+        // New logic: try to infer from URL first
+        if (!empty($document->source_url)) {
+            $urlString = strtolower($document->source_url);
+
+            // Check for specific document types in URL
+            if (strpos($urlString, '/perpres') !== false) {
+                return 'Peraturan Presiden';
+            }
+            if (strpos($urlString, '/uu') !== false) {
+                return 'Undang-undang';
+            }
+            if (strpos($urlString, '/pp') !== false) {
+                return 'Peraturan Pemerintah';
+            }
+            
+            // Check for various ministry-specific permen patterns
+            if (preg_match('/\/(permen|permendagri|permenkumham|permendikbud|permendikbudriset|permenkes|permenkeu|permentan|permenhub|permenpan|permenlu|permendesa|permenpera|permensos|permenlhk|permenristekdikti|permenedag|permenperin|permenkominfo|permenkopukm|permenpopar|permenjamsos|permenaker|permentrans)/i', $urlString)) {
+                return 'Peraturan Menteri';
+            }
+        }
+
+        // Fallback to old logic using title and document_number
         $text = strtolower($document->title . ' ' . $document->document_number);
-        
+
         if (strpos($text, 'undang-undang') !== false || strpos($text, 'uu no') !== false) {
             return 'Undang-undang';
         }
-        
+
         if (strpos($text, 'peraturan pemerintah') !== false || strpos($text, 'pp no') !== false) {
             return 'Peraturan Pemerintah';
         }
-        
+
         if (strpos($text, 'peraturan presiden') !== false || strpos($text, 'perpres') !== false) {
             return 'Peraturan Presiden';
         }
-        
+
         if (strpos($text, 'peraturan menteri') !== false || strpos($text, 'permen') !== false) {
             return 'Peraturan Menteri';
         }
-        
+
         // Default based on agency if available
         $agency = $document->metadata['agency'] ?? '';
         if (strpos(strtolower($agency), 'presiden') !== false) {
             return 'Peraturan Presiden';
         }
-        
+
         return 'Unknown Document Type';
     }
 
@@ -258,21 +315,32 @@ class NormalizeDocumentColumns extends Command
         return $fullText ?: '[No extractable text available]';
     }
 
-    private function displayDocumentChanges(LegalDocument $document, array $changes, bool $isDryRun): void
+    private function displayDocumentChanges(LegalDocument $document, array $changes, bool $isDryRun, bool $isForce = false): void
     {
         $prefix = $isDryRun ? '👁️ ' : '✏️ ';
+        if ($isForce && isset($changes['document_type'])) {
+            $from = $changes['document_type']['from'];
+            $to = $changes['document_type']['to'];
+            // Don't show "already correct" for Unknown types
+            if ($from === $to && !in_array($from, ['Unknown Document Type', 'Unknown'])) {
+                $prefix .= '✓ '; // Indicate already correct in force mode
+            }
+        }
+        
         $this->info("{$prefix}Document: {$document->title}");
         
         foreach ($changes as $field => $change) {
             $from = $change['from'] ?? 'NULL';
             $to = $change['to'];
-            $this->line("   {$field}: {$from} → {$to}");
+            // Don't show "already correct" for Unknown types
+            $indicator = ($isForce && $from === $to && !in_array($from, ['Unknown Document Type', 'Unknown'])) ? ' (already correct)' : '';
+            $this->line("   {$field}: {$from} → {$to}{$indicator}");
         }
         
         $this->newLine();
     }
 
-    private function displayStats(array $stats, bool $isDryRun): void
+    private function displayStats(array $stats, bool $isDryRun, bool $isForce = false): void
     {
         $this->newLine();
         $this->info('📊 COLUMN NORMALIZATION SUMMARY:');
@@ -286,12 +354,20 @@ class NormalizeDocumentColumns extends Command
             ['📝 Total Documents Updated', $isDryRun ? 'DRY RUN' : $stats['total_updated']]
         ];
         
+        if ($isForce) {
+            array_splice($tableData, 1, 0, [['Document Type Processed (Force)', $stats['document_type_processed']]]);
+        }
+        
         $this->table(['Change Type', 'Count'], $tableData);
 
         if ($isDryRun) {
             $this->warn('⚠️  This was a dry run. Use without --dry-run to apply changes.');
         } else {
-            $this->info("✅ Column normalization completed for {$stats['total_updated']} documents.");
+            $message = "✅ Column normalization completed for {$stats['total_updated']} documents.";
+            if ($isForce) {
+                $message .= " (Force mode: {$stats['document_type_processed']} documents processed for type normalization)";
+            }
+            $this->info($message);
         }
     }
 }

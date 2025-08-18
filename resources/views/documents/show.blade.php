@@ -1,4 +1,11 @@
 {{-- resources/views/documents/show.blade.php --}}
+<?php
+// resources/views/documents/show.blade.php - Metadata section only
+
+// Add this to the top of the file
+use App\Helpers\MetadataDisplayHelper;
+?>
+
 <x-layout>
     <x-slot:title>{{ $document->title }}</x-slot:title>
 
@@ -43,20 +50,60 @@
                                 <div class="mt-3">
                                     <small class="text-muted d-block mb-2">Informasi Tambahan</small>
                                     <div class="row g-2">
-                                        @foreach($document->metadata as $key => $value)
+                                        @php
+                                            $displayableMetadata = MetadataDisplayHelper::getDisplayableMetadata($document->metadata);
+                                        @endphp
+                                        
+                                        @foreach($displayableMetadata as $key => $value)
                                             @if($value && $key !== 'tanggal_berakhir')
                                             <div class="col-md-6 col-lg-4">
                                                 <small class="text-muted">{{ ucwords(str_replace('_', ' ', $key)) }}:</small>
                                                 <span class="d-block">
-                                                    @if(is_array($value))
-                                                        {{ implode(', ', $value) }}
-                                                    @else
-                                                        {{ $value }}
-                                                    @endif
+                                                    {{ MetadataDisplayHelper::displayValue($value) }}
                                                 </span>
                                             </div>
                                             @endif
                                         @endforeach
+                                        
+                                        {{-- Special handling for TIK-related information --}}
+                                        @if(isset($document->metadata['tik_summary']))
+                                            @php
+                                                $tikSummary = $document->metadata['tik_summary'];
+                                            @endphp
+                                            
+                                            @if(isset($tikSummary['tik_score']))
+                                            <div class="col-md-6 col-lg-4">
+                                                <small class="text-muted">TIK Score:</small>
+                                                <span class="d-block">{{ $tikSummary['tik_score'] }}</span>
+                                            </div>
+                                            @endif
+                                            
+                                            @if(isset($tikSummary['relevance_level']))
+                                            <div class="col-md-6 col-lg-4">
+                                                <small class="text-muted">TIK Relevance:</small>
+                                                <span class="d-block badge bg-info">{{ ucfirst($tikSummary['relevance_level']) }}</span>
+                                            </div>
+                                            @endif
+                                            
+                                            @if(isset($tikSummary['found_keywords']) && is_array($tikSummary['found_keywords']))
+                                            <div class="col-md-12">
+                                                <small class="text-muted">TIK Keywords Found:</small>
+                                                <span class="d-block">
+                                                    {{ MetadataDisplayHelper::displayValue($tikSummary['found_keywords']) }}
+                                                </span>
+                                            </div>
+                                            @endif
+                                        @endif
+                                        
+                                        {{-- Display TIK keywords from column if available --}}
+                                        @if($document->tik_keywords && count($document->tik_keywords) > 0)
+                                        <div class="col-md-12">
+                                            <small class="text-muted">TIK Keywords (Column):</small>
+                                            <span class="d-block">
+                                                {{ MetadataDisplayHelper::displayValue($document->tik_keywords) }}
+                                            </span>
+                                        </div>
+                                        @endif
                                     </div>
                                 </div>
                                 @endif
