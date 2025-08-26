@@ -22,7 +22,7 @@ Route::get('/ktbnk', [FilterKebijakanBukanMenluController::class, 'index'])->nam
 // Halaman Kebijakan TIK by Kemlu
 Route::get('/ktbk', [FilterKebijakanMenluController::class, 'index'])->name('ktbk');
 
-// Document viewer routes - ADD THESE ROUTES
+
 Route::prefix('documents')->name('documents.')->group(function () {
     Route::get('/{document}', [DocumentController::class, 'show'])->name('show');
     Route::get('/{document}/download', [DocumentController::class, 'download'])->name('download');
@@ -46,10 +46,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Route untuk menampilkan dashboard setelah login
-Route::get('/dashboard', function () {
-    return redirect()->route('admin.dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+
 
 // Rute autentikasi
 require __DIR__.'/auth.php';

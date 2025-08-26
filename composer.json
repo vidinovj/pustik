@@ -28,7 +28,8 @@
             "Database\\Seeders\\": "database/seeder/"
         },
         "files": [
-            "app/Helpers/MetadataDisplayHelper.php"
+            "app/Helpers/MetadataDisplayHelper.php",
+            "app/Helpers/helpers.php"
         ]
     },
     "autoload-dev": {

@@ -54,7 +54,7 @@ class NormalizeDocumentMetadata extends Command
                 if (isset($originalMetadata['tik_summary']) && !isset($normalizedMetadata['tik_summary'])) {
                     $stats['flattened_tik_summary']++;
                 }
-                if ($originalMetadata['agency'] !== $normalizedMetadata['agency']) {
+                if (($originalMetadata['agency'] ?? null) !== ($normalizedMetadata['agency'] ?? null)) {
                     $stats['agency_inferred']++;
                 }
                 if (count($normalizedMetadata['keywords']) > count($originalMetadata['keywords'] ?? [])) {
@@ -239,7 +239,7 @@ class NormalizeDocumentMetadata extends Command
         
         // Preserve good existing agency data
         if (!empty($existingAgency) && 
-            !in_array($existingAgency, ['Unknown', 'Unknown Agency', 'TIK Agency']) &&
+            !in_array($existingAgency, ['Unknown', 'Unknown Agency', 'TIK Agency', 'Kementerian (Unspecified)']) &&
             !strpos($existingAgency, 'specific_tik_url') !== false) {
             return $existingAgency;
         }
@@ -319,6 +319,7 @@ class NormalizeDocumentMetadata extends Command
             'permenedag' => 'Kementerian Perdagangan',
             'permenperin' => 'Kementerian Perindustrian',
             'permenkominfo' => 'Kementerian Komunikasi dan Informatika',
+            'permenkomdigi' => 'Kementerian Komunikasi dan Informatika',
             'permenkopukm' => 'Kementerian Koperasi dan UKM',
             'permenpopar' => 'Kementerian Pariwisata',
             'permenjamsos' => 'Kementerian Ketenagakerjaan',

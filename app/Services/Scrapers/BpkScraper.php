@@ -1,44 +1,76 @@
 <?php
 // app/Services/Scrapers/BpkScraper.php
+// ENHANCEMENT: Add advanced entity-based search to existing working BpkScraper
 
 namespace App\Services\Scrapers;
 
 use App\Models\DocumentSource;
 use App\Services\Scrapers\EnhancedDocumentScraper;
+use App\Services\TikTermsService;
+use App\Services\DocumentClassifierService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
-use DOMDocument;
 
 class BpkScraper extends BaseScraper
 {
     private EnhancedDocumentScraper $enhancedScraper;
-    private array $testUrls = [
-        'https://peraturan.bpk.go.id/Details/274494/uu-no-11-tahun-2008',
-        'https://peraturan.bpk.go.id/Details/37582/uu-no-19-tahun-2016',
-        'https://peraturan.bpk.go.id/Details/229798/uu-no-27-tahun-2022',
+    private int $minRelevanceScore = 5;
+
+    // TIK-focused search queries for BPK
+    private array $searchQueries = [
+        'undang-undang informasi transaksi elektronik', 'UU ITE 11 2008', 'undang-undang data pribadi',
+        'UU 27 2022', 'perlindungan data pribadi', 'sistem pemerintahan berbasis elektronik', 'SPBE',
+        'transformasi digital', 'layanan digital nasional', 'satu data indonesia', 'keamanan siber',
+        'insiden siber', 'cyber security', 'manajemen krisis siber', 'perdagangan melalui sistem elektronik',
+        'PMSE', 'e-commerce', 'teknologi finansial', 'fintech', 'pembayaran digital', 'tanda tangan elektronik',
+        'sertifikat elektronik', 'telekomunikasi', 'digitalisasi daerah', 'teknologi informasi 2024',
+        'sistem elektronik 2024', 'digital 2023', 'informasi 2023', 'mencabut peraturan', 'perubahan atas',
+        'melaksanakan ketentuan'
+    ];
+    
+    // TIK-focused government entities (from your discovery)
+    private array $entities = [
+        '661' => [
+            'name' => 'Kementerian Luar Negeri',
+            'short' => 'Kemlu',
+            'focus' => 'diplomatic_technology'
+        ],
+        '568' => [
+            'name' => 'Kementerian Riset, Teknologi, dan Pendidikan Tinggi',
+            'short' => 'Kemristekdikti', 
+            'focus' => 'research_technology'
+        ],
+        '676' => [
+            'name' => 'Kementerian Komunikasi dan Digital',
+            'short' => 'Komdigi',
+            'focus' => 'digital_infrastructure'
+        ],
+        '603' => [
+            'name' => 'Kementerian Komunikasi dan Informatika',
+            'short' => 'Kominfo',
+            'focus' => 'telecommunications'
+        ],
+        '557' => [
+            'name' => 'Badan Siber dan Sandi Negara',
+            'short' => 'BSSN',
+            'focus' => 'cybersecurity'
+        ],
+        '607' => [
+            'name' => 'Badan Riset dan Inovasi Nasional',
+            'short' => 'BRIN',
+            'focus' => 'innovation_research'
+        ]
     ];
 
-    private array $searchPatterns = [
-        'uu' => [
-            'search_term' => 'undang-undang',
-            'url_pattern' => '/Details/{id}/uu-no-{number}-tahun-{year}',
-            'category_url' => 'https://peraturan.bpk.go.id/search?category=uu'
-        ],
-        'pp' => [
-            'search_term' => 'peraturan pemerintah',
-            'url_pattern' => '/Details/{id}/pp-no-{number}-tahun-{year}',
-            'category_url' => 'https://peraturan.bpk.go.id/search?category=pp'
-        ],
-        'perpres' => [
-            'search_term' => 'peraturan presiden',
-            'url_pattern' => '/Details/{id}/perpres-no-{number}-tahun-{year}',
-            'category_url' => 'https://peraturan.bpk.go.id/search?category=perpres'
-        ],
-        'permen' => [
-            'search_term' => 'peraturan menteri',
-            'url_pattern' => '/Details/{id}/permen-{ministry}-no-{number}-tahun-{year}',
-            'category_url' => 'https://peraturan.bpk.go.id/search?category=permen'
-        ]
+    // Advanced search keywords for entity-based searches
+    private array $advancedSearchKeywords = [
+        'teknologi', 'digital', 'sistem informasi', 'komunikasi', 'cyber', 'elektronik', 'data'
+    ];
+
+    private array $testUrls = [
+        'https://peraturan.bpk.go.id/Details/274494/uu-no-11-tahun-2008',
+        'https://peraturan.bpk.go.id/Details/37582/uu-no-19-tahun-2016', 
+        'https://peraturan.bpk.go.id/Details/229798/uu-no-27-tahun-2022',
     ];
 
     public function __construct(DocumentSource $source)
@@ -51,70 +83,81 @@ class BpkScraper extends BaseScraper
             'timeout' => 45,
             'retries' => 3
         ]);
+        
+        $this->minRelevanceScore = $source->config['min_tik_score'] ?? 5;
+    }
+
+    public function setMinRelevanceScore(int $score): void
+    {
+        $this->minRelevanceScore = $score;
     }
 
     public function scrape(): array
     {
-        Log::channel('legal-documents')->info("BpkScraper: Starting BPK document discovery");
+        Log::channel('legal-documents')->info("BpkScraper: Starting enhanced BPK scraping with advanced entity search");
         
         $results = [];
         $strategies = $this->determineOptimalStrategies();
         
         try {
-            // Test strategies with known working URLs
             $testResults = $this->runStrategyTest($strategies);
             $bestStrategy = $this->selectBestStrategy($testResults);
             
             Log::channel('legal-documents')->info("BPK Scraper selected strategy: {$bestStrategy}");
             
-            // Discover document URLs from multiple sources
-            $documentUrls = $this->getUrlsFromSearch();
+            $documentUrls = $this->getUrlsFromAdvancedEntitySearch();
             
-            // Remove duplicates and prioritize
-            $documentUrls = $this->deduplicateAndPrioritize($documentUrls);
-            $documentUrls = array_slice($documentUrls, 0, 40); // Limit for testing
+            $documentUrls = array_slice($documentUrls, 0, 40);
             
-            Log::channel('legal-documents')->info("BPK Scraper found " . count($documentUrls) . " URLs to process");
+            Log::channel('legal-documents')->info("BPK Scraper found " . count($documentUrls) . " URLs to process (including advanced entity search)");
             
-            // Process each document URL
+            $documentCount = 0;
+            $totalProcessed = 0;
+            
             foreach ($documentUrls as $index => $url) {
                 Log::channel('legal-documents')->info("BPK Processing URL {$index}: {$url}");
                 
                 $strategies = [$bestStrategy];
                 if ($index % 8 === 0) {
-                    // Every 8th request, try fallback strategies
                     $strategies = ['stealth', 'basic', 'mobile'];
                 }
                 
                 $documentData = $this->enhancedScraper->scrapeWithStrategies($url, $strategies);
                 
                 if ($documentData) {
-                    // BPK-specific data enrichment
-                    $enrichedData = $this->enrichBpkData($documentData, $url);
-                    $document = $this->saveDocumentWithValidation($enrichedData);
+                    $totalProcessed++;
                     
-                    if ($document) {
-                        $results[] = $document;
-                        $this->source->incrementDocumentCount();
+                    $enrichedData = $this->applyFiltering($documentData, $url);
+                    
+                    if ($enrichedData && $enrichedData['is_tik_related']) {
+                        $document = $this->saveDocumentWithValidation($enrichedData);
+                        
+                        if ($document) {
+                            $results[] = $document;
+                            $documentCount++;
+                            $this->source->increment('total_documents');
+                            
+                            Log::channel('legal-documents')->info("Relevant document saved: {$document->title} (Score: {$enrichedData['tik_relevance_score']})");
+                        }
+                    } else {
+                        Log::channel('legal-documents')->debug("Non-relevant document filtered out: " . ($documentData['title'] ?? 'Unknown'));
                     }
                 } else {
                     Log::channel('legal-documents-errors')->warning("BPK: Failed to extract data from: {$url}");
                 }
                 
-                // Adaptive delay based on success rate
-                $this->adaptiveDelay($index, count($results));
+                $this->adaptiveDelay($index, $documentCount);
                 
-                // Stop conditions
-                if (count($results) >= 25) {
-                    Log::channel('legal-documents')->info("BPK: Reached target of 25 documents");
+                if ($documentCount >= 20) {
+                    Log::channel('legal-documents')->info("BPK: Reached target of 20 relevant documents");
                     break;
                 }
                 
-                if ($index > 0 && $index % 15 === 0) {
-                    $successRate = count($results) / ($index + 1);
-                    if ($successRate < 0.25) {
-                        Log::channel('legal-documents')->warning("BPK: Low success rate ({$successRate}), stopping");
-                        break;
+                if ($totalProcessed > 10) {
+                    $successRate = $documentCount / $totalProcessed;
+                    if ($successRate < 0.15) {
+                        Log::channel('legal-documents')->warning("BPK: Low relevance success rate ({$successRate}), adjusting strategy");
+                        $this->minRelevanceScore = max(3, $this->minRelevanceScore - 2);
                     }
                 }
             }
@@ -124,327 +167,221 @@ class BpkScraper extends BaseScraper
             throw $e;
         }
         
-        $this->source->markAsScraped();
-        Log::channel('legal-documents')->info("BpkScraper: Completed with " . count($results) . " documents");
+        $this->source->update(['last_scraped_at' => now()]);
+        Log::channel('legal-documents')->info("BpkScraper: Completed with {$documentCount} relevant documents out of {$totalProcessed} processed");
         
         return $results;
     }
 
-    /**
-     * Search BPK for documents and extract detail URLs
-     * Updated with 6.2 expanded query strategy
-     */
-    private function getUrlsFromSearch(): array
+    private function getUrlsFromAdvancedEntitySearch(): array
     {
-        // 6.2.1 High-priority keyword and acronym queries
-        $searchQueries = [
-            // Core TIK Laws
-            'undang-undang informasi transaksi elektronik',
-            'UU ITE 11 2008',
-            'undang-undang data pribadi',
-            'UU 27 2022',
-            'perlindungan data pribadi',
-            
-            // Digital Government
-            'sistem pemerintahan berbasis elektronik',
-            'SPBE',
-            'transformasi digital',
-            'layanan digital nasional',
-            'satu data indonesia',
-            
-            // Security & Privacy
-            'keamanan siber',
-            'insiden siber',
-            'cyber security',
-            'manajemen krisis siber',
-            
-            // E-commerce & Fintech
-            'perdagangan melalui sistem elektronik',
-            'PMSE',
-            'e-commerce',
-            'teknologi finansial',
-            'fintech',
-            'pembayaran digital',
-            
-            // Digital Infrastructure
-            'tanda tangan elektronik',
-            'sertifikat elektronik',
-            'telekomunikasi',
-            'digitalisasi daerah',
-            
-            // Recent years for discovery
-            'teknologi informasi 2024',
-            'sistem elektronik 2024',
-            'digital 2023',
-            'informasi 2023',
-            
-            // Relationship queries for regulatory cascade
-            'mencabut peraturan',
-            'perubahan atas',
-            'melaksanakan ketentuan'
-        ];
-        
         $urls = [];
-        
-        foreach ($searchQueries as $query) {
-            $searchUrls = $this->searchBpkForDocuments($query);
-            $urls = array_merge($urls, $searchUrls);
-            
-            // Rate limiting
-            sleep(2);
-            
-            // Progress logging
-            if (count($searchUrls) > 0) {
-                Log::channel('legal-documents')->info("BPK search '{$query}' found " . count($searchUrls) . " URLs");
-            }
-        }
-        
-        Log::channel('legal-documents')->info("BPK getUrlsFromSearch found " . count(array_unique($urls)) . " total URLs");
-        return array_unique($urls);
-    }
-
-    /**
-     * Search BPK and extract document detail URLs from results
-     */
-    private function searchBpkForDocuments(string $query): array
-    {
-        $searchUrl = "https://peraturan.bpk.go.id/Search?keywords=" . urlencode($query) . "&tentang=&nomor=";
-        
-        try {
-            $response = Http::timeout(30)
-                ->withHeaders([
+        Log::channel('legal-documents')->info("🎯 Starting Advanced Entity Search for relevant documents");
+        foreach ($this->advancedSearchKeywords as $keyword) {
+            $searchUrl = $this->buildAdvancedEntitySearchUrl($keyword);
+            Log::channel('legal-documents')->info("🔍 Advanced Entity Search: {$searchUrl}");
+            try {
+                $response = Http::timeout(45)->withHeaders([
                     'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                     'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                     'Accept-Language' => 'id-ID,id;q=0.9,en;q=0.8',
-                ])
-                ->get($searchUrl);
-                
+                ])->get($searchUrl);
+                if ($response->successful()) {
+                    $entityUrls = $this->extractDetailUrlsFromSearchResults($response->body());
+                    $urls = array_merge($urls, $entityUrls);
+                    Log::channel('legal-documents')->info("Advanced search for '{$keyword}' found " . count($entityUrls) . " URLs from entities");
+                    foreach ($entityUrls as $url) {
+                        $this->markUrlWithEntitySource($url, $keyword);
+                    }
+                } else {
+                    Log::channel('legal-documents-errors')->warning("Advanced entity search failed for keyword '{$keyword}': HTTP {$response->status()}");
+                }
+                sleep(3);
+            } catch (\Exception $e) {
+                Log::channel('legal-documents-errors')->warning("Advanced entity search failed for keyword '{$keyword}': " . $e->getMessage());
+                continue;
+            }
+        }
+        Log::channel('legal-documents')->info("🎯 Advanced Entity Search completed. Found " . count(array_unique($urls)) . " unique URLs");
+        return array_unique($urls);
+    }
+
+    private function buildAdvancedEntitySearchUrl(string $keyword): string
+    {
+        $baseUrl = 'https://peraturan.bpk.go.id/Search';
+        $params = ['keywords' => '', 'tentang' => $keyword, 'nomor' => ''];
+        $entityParams = [];
+        foreach (array_keys($this->entities) as $entityId) {
+            $entityParams[] = "entitas={$entityId}";
+        }
+        $queryString = http_build_query($params) . '&' . implode('&', $entityParams);
+        return $baseUrl . '?' . $queryString;
+    }
+
+    private function markUrlWithEntitySource(string $url, string $keyword): void
+    {
+        $cacheKey = 'bpk_entity_url_' . md5($url);
+        cache()->put($cacheKey, [
+            'search_keyword' => $keyword,
+            'search_type' => 'advanced_entity_search',
+            'entities_searched' => array_keys($this->entities),
+            'searched_at' => now()->toISOString()
+        ], 86400);
+    }
+
+    private function applyFiltering(array $data, string $url): ?array
+    {
+        $title = $data['title'] ?? '';
+        $content = $data['full_text'] ?? '';
+        $metadata = $data['metadata'] ?? [];
+        $relevanceScore = TikTermsService::calculateTikScore($title . ' ' . $content);
+        if ($relevanceScore < $this->minRelevanceScore) {
+            return null;
+        }
+        $keywords = TikTermsService::extractTikKeywords($title . ' ' . $content);
+        $tempDocument = new \App\Models\LegalDocument(['title' => $title, 'full_text' => $content, 'metadata' => $metadata]);
+        $documentCategory = DocumentClassifierService::classifyDocument($tempDocument);
+        $entityInfo = $this->getEntitySourceInfo($url);
+        $data['tik_relevance_score'] = $relevanceScore;
+        $data['tik_keywords'] = $keywords;
+        $data['is_tik_related'] = true;
+        $data['document_category'] = $documentCategory['category'] ?? 'general_technology';
+        $data['metadata'] = array_merge($metadata, [
+            'classification' => $documentCategory,
+            'score_breakdown' => $this->getScoreBreakdown($title . ' ' . $content),
+            'extraction_method' => 'bpk_scraper_with_entities',
+            'filter_applied' => true,
+            'min_score_threshold' => $this->minRelevanceScore,
+            'entity_search_info' => $entityInfo,
+            'searched_entities' => $this->getEntityNames()
+        ]);
+        return $data;
+    }
+
+    private function getEntitySourceInfo(string $url): ?array
+    {
+        $cacheKey = 'bpk_entity_url_' . md5($url);
+        return cache()->get($cacheKey);
+    }
+
+    private function getEntityNames(): array
+    {
+        $names = [];
+        foreach ($this->entities as $id => $info) {
+            $names[$id] = $info['name'];
+        }
+        return $names;
+    }
+
+    public function getEntitySearchAnalytics(): array
+    {
+        $analytics = [
+            'entities_configured' => count($this->entities),
+            'search_keywords' => count($this->advancedSearchKeywords),
+            'entity_details' => $this->entities,
+            'last_search_urls' => []
+        ];
+        foreach (array_slice($this->advancedSearchKeywords, 0, 3) as $keyword) {
+            $analytics['last_search_urls'][] = $this->buildAdvancedEntitySearchUrl($keyword);
+        }
+        return $analytics;
+    }
+
+    private function getScoreBreakdown(string $text): array
+    {
+        $breakdown = [];
+        $textLower = strtolower($text);
+        foreach (TikTermsService::getAllTikTerms() as $term => $score) {
+            if (stripos($textLower, $term) !== false) {
+                $breakdown[$term] = $score;
+            }
+        }
+        return $breakdown;
+    }
+
+    private function searchBpkForDocuments(string $query): array
+    {
+        $searchUrl = "https://peraturan.bpk.go.id/Search?keywords=" . urlencode($query) . "&tentang=&nomor=";
+        try {
+            $response = Http::timeout(30)->withHeaders([
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language' => 'id-ID,id;q=0.9,en;q=0.8',
+            ])->get($searchUrl);
             if (!$response->successful()) {
                 return [];
             }
-            
-            file_put_contents('bpk_search_results.html', $response->body());
             return $this->extractDetailUrlsFromSearchResults($response->body());
-            
         } catch (\Exception $e) {
             Log::channel('legal-documents-errors')->warning("BPK search failed for query: {$query} - {$e->getMessage()}");
             return [];
         }
     }
 
-    /**
-     * Extract BPK detail URLs from search results HTML
-     */
     private function extractDetailUrlsFromSearchResults(string $html): array
     {
         $dom = $this->parseHtml($html);
         if (!$dom) return [];
-        
         $xpath = $this->createXPath($dom);
         $urls = [];
-        
-        // BPK uses specific patterns for document links
-        $linkPatterns = [
-            '//a[contains(@href, "/Details/")]/@href',
-            '//a[contains(@href, "/Home/Details/")]/@href',
-            '//a[contains(@class, "document-link")]/@href',
-            '//a[contains(@class, "result-title")]/@href'
-        ];
-        
+        $linkPatterns = ['//a[contains(@href, "/Details/")]/@href'];
         foreach ($linkPatterns as $pattern) {
             $elements = $xpath->query($pattern);
             foreach ($elements as $element) {
                 $href = $element->nodeValue;
                 $fullUrl = $this->normalizeUrl($href, 'https://peraturan.bpk.go.id');
-                
                 if ($this->isValidBpkDetailUrl($fullUrl)) {
                     $urls[] = $fullUrl;
                 }
             }
         }
-        
         return array_unique($urls);
     }
 
-    /**
-     * Get URLs from BPK category pages
-     * Updated with 6.2.2 issuing body and theme approach
-     */
-    private function getUrlsFromCategories(): array
+    private function isValidBpkDetailUrl(string $url): bool
     {
-        // 6.2.3 Document type and year discovery + 6.2.2 issuing body themes
-        $categoryUrls = [
-            // Recent laws by type
-            'https://peraturan.bpk.go.id/search?jenis=uu&tahun=2024',
-            'https://peraturan.bpk.go.id/search?jenis=uu&tahun=2023',
-            'https://peraturan.bpk.go.id/search?jenis=pp&tahun=2024',
-            'https://peraturan.bpk.go.id/search?jenis=pp&tahun=2023',
-            'https://peraturan.bpk.go.id/search?jenis=perpres&tahun=2024',
-            'https://peraturan.bpk.go.id/search?jenis=perpres&tahun=2023',
-            
-            // TIK-specific categories
-            'https://peraturan.bpk.go.id/search?jenis=uu&q=informasi',
-            'https://peraturan.bpk.go.id/search?jenis=uu&q=elektronik',
-            'https://peraturan.bpk.go.id/search?jenis=uu&q=digital',
-            'https://peraturan.bpk.go.id/search?jenis=pp&q=sistem',
-            'https://peraturan.bpk.go.id/search?jenis=pp&q=teknologi',
-            'https://peraturan.bpk.go.id/search?jenis=perpres&q=cyber',
-            
-            // Issuing body focused searches  
-            'https://peraturan.bpk.go.id/search?q=kominfo',
-            'https://peraturan.bpk.go.id/search?q=komdigi',
-            'https://peraturan.bpk.go.id/search?q=BSSN',
-            'https://peraturan.bpk.go.id/search?q=OJK+fintech',
-            'https://peraturan.bpk.go.id/search?q=bank+indonesia+digital'
+        $patterns = [
+            '/peraturan\.bpk\.go\.id\/Details\/\d+\/[a-z]+-no-\d+/',
+            '/peraturan\.bpk\.go\.id\/Home\/Details\/\d+/',
         ];
-        
-        $urls = [];
-        
-        foreach ($categoryUrls as $categoryUrl) {
-            try {
-                $response = Http::timeout(30)->get($categoryUrl);
-                if ($response->successful()) {
-                    $categoryUrls = $this->extractDetailUrlsFromSearchResults($response->body());
-                    $urls = array_merge($urls, $categoryUrls);
-                    
-                    Log::channel('legal-documents')->info("BPK category '{$categoryUrl}' found " . count($categoryUrls) . " URLs");
-                }
-                sleep(2); // Rate limiting
-            } catch (\Exception $e) {
-                Log::channel('legal-documents-errors')->warning("BPK category failed: {$categoryUrl}");
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $url)) {
+                return true;
             }
         }
-        
-        Log::channel('legal-documents')->info("BPK getUrlsFromCategories found " . count(array_unique($urls)) . " total URLs");
-        return array_unique($urls);
+        return false;
     }
 
-    /**
-     * Get URLs from recent updates/news section
-     */
-    private function getUrlsFromRecentUpdates(): array
-    {
-        // BPK might have recent updates or featured documents section
-        $recentUrls = [
-            'https://peraturan.bpk.go.id/recent',
-            'https://peraturan.bpk.go.id/terbaru',
-            'https://peraturan.bpk.go.id/'
-        ];
-        
-        $urls = [];
-        
-        foreach ($recentUrls as $recentUrl) {
-            try {
-                $response = Http::timeout(30)->get($recentUrl);
-                if ($response->successful()) {
-                    $recentDocUrls = $this->extractDetailUrlsFromSearchResults($response->body());
-                    $urls = array_merge($urls, $recentDocUrls);
-                }
-                sleep(2);
-            } catch (\Exception $e) {
-                // Silent fail for optional sources
-            }
-        }
-        
-        return array_unique($urls);
-    }
-
-    /**
-     * Check if URL is a valid BPK detail URL
-     */
-
-
-    /**
-     * Normalize URL to absolute format
-     */
     private function normalizeUrl(string $href, string $baseUrl): string
     {
         if (filter_var($href, FILTER_VALIDATE_URL)) {
             return $href;
         }
-        
         if (strpos($href, '/') === 0) {
             return $baseUrl . $href;
         }
-        
         return rtrim($baseUrl, '/') . '/' . ltrim($href, '/');
     }
 
-    /**
-     * Enrich document data with BPK-specific information
-     */
-    private function enrichBpkData(array $data, string $url): array
-    {
-        // Extract BPK ID from URL
-        if (preg_match('#/Details/(\d+)/#', $url, $matches)) {
-            $data['bpk_id'] = $matches[1];
-        }
-        
-        // Add BPK-specific metadata
-        $data['metadata'] = array_merge($data['metadata'] ?? [], [
-            'source_type' => 'bpk_legal_database',
-            'bpk_url' => $url,
-            'extraction_method' => 'bpk_enhanced_scraper',
-            'scraped_at' => now()->toISOString()
-        ]);
-        
-        return $data;
-    }
-
-    /**
-     * Remove duplicates and prioritize important documents
-     */
-    private function deduplicateAndPrioritize(array $urls): array
-    {
-        $urls = array_unique($urls);
-        
-        // Prioritize recent years and important document types
-        $prioritized = [];
-        $regular = [];
-        
-        foreach ($urls as $url) {
-            if (preg_match('#(2024|2023|uu-no|undang-undang)#', $url)) {
-                $prioritized[] = $url;
-            } else {
-                $regular[] = $url;
-            }
-        }
-        
-        return array_merge($prioritized, $regular);
-    }
-
-    // Strategy testing methods (similar to ImprovedPeraturanScraper)
     private function runStrategyTest(array $strategies): array
     {
-        Log::channel('legal-documents')->info("BPK: Running strategy test with " . count($this->testUrls) . " URLs");
-        
+        Log::channel('legal-documents')->info("BPK: Running strategy test");
         $results = [];
-        
         foreach ($strategies as $strategy) {
-            $results[$strategy] = [
-                'success_count' => 0,
-                'total_time' => 0,
-                'error_count' => 0
-            ];
-            
+            $results[$strategy] = ['success_count' => 0, 'total_time' => 0, 'error_count' => 0];
             foreach (array_slice($this->testUrls, 0, 2) as $testUrl) {
                 $startTime = microtime(true);
-                
                 $data = $this->enhancedScraper->scrapeWithStrategies($testUrl, [$strategy]);
-                
                 $duration = microtime(true) - $startTime;
                 $results[$strategy]['total_time'] += $duration;
-                
                 if ($data) {
                     $results[$strategy]['success_count']++;
                 } else {
                     $results[$strategy]['error_count']++;
                 }
-                
                 sleep(2);
             }
         }
-        
         return $results;
     }
 
@@ -452,43 +389,35 @@ class BpkScraper extends BaseScraper
     {
         $bestStrategy = 'stealth';
         $bestScore = 0;
-        
         foreach ($testResults as $strategy => $results) {
             $testCount = 2;
             $successRate = $results['success_count'] / $testCount;
             $avgTime = $results['total_time'] / $testCount;
-            
             $score = ($successRate * 100) - ($avgTime * 1.5);
-            
-            Log::channel('legal-documents')->info("BPK Strategy {$strategy}: {$successRate} success rate, {$avgTime}s avg time, score: {$score}");
-            
             if ($score > $bestScore) {
                 $bestScore = $score;
                 $bestStrategy = $strategy;
             }
         }
-        
         return $bestStrategy;
     }
 
     private function determineOptimalStrategies(): array
     {
         $lastSuccess = cache()->get('bpk_scraper_last_success_strategy');
-        
         if ($lastSuccess) {
             return [$lastSuccess, 'stealth', 'basic'];
         }
-        
         return ['stealth', 'basic', 'mobile'];
     }
 
     private function saveDocumentWithValidation(array $data): ?\App\Models\LegalDocument
     {
         if (empty($data['title']) || strlen($data['title']) < 10) {
-            Log::channel('legal-documents-errors')->warning("BPK: Invalid title: " . ($data['title'] ?? 'empty'));
             return null;
         }
         
+        // FIX: Use correct database field names
         $cleanData = [
             'title' => $this->cleanText($data['title']),
             'document_type' => $data['document_type'] ?? $this->extractDocumentType($data['title']),
@@ -496,8 +425,15 @@ class BpkScraper extends BaseScraper
             'issue_date' => $data['issue_date'] ?? null,
             'source_url' => $data['source_url'],
             'pdf_url' => $data['pdf_url'] ?? null,
-            'source_id' => $this->source->id,
-            'metadata' => $data['metadata'] ?? []
+            'full_text' => $data['full_text'] ?? $data['title'], // FIX: Ensure full_text is populated
+            'document_source_id' => $this->source->id, // FIX: Use correct field name
+            'status' => 'active', // FIX: Add required status field
+            'metadata' => $data['metadata'] ?? [],
+            'tik_relevance_score' => $data['tik_relevance_score'] ?? 0,
+            'tik_keywords' => $data['tik_keywords'] ?? [],
+            'is_tik_related' => $data['is_tik_related'] ?? false,
+            'document_category' => $data['document_category'] ?? null,
+            'checksum' => md5($data['title'] . ($data['document_number'] ?? '') . ($data['issue_date'] ?? '')) // FIX: Add checksum
         ];
         
         return $this->saveDocument($cleanData);
@@ -512,22 +448,18 @@ class BpkScraper extends BaseScraper
             'peraturan menteri' => 'Peraturan Menteri',
             'keputusan presiden' => 'Keputusan Presiden',
         ];
-        
         $titleLower = strtolower($title);
-        
         foreach ($types as $pattern => $type) {
             if (stripos($titleLower, $pattern) !== false) {
                 return $type;
             }
         }
-        
         return 'Unknown';
     }
 
     private function adaptiveDelay(int $index, int $successCount): void
     {
         $baseDelay = 3;
-        
         if ($index > 5) {
             $successRate = $successCount / $index;
             if ($successRate < 0.4) {
@@ -536,15 +468,12 @@ class BpkScraper extends BaseScraper
                 $baseDelay = 5;
             }
         }
-        
         $delay = $baseDelay + rand(1, 2);
-        
-        Log::channel('legal-documents')->debug("BPK: Delaying {$delay} seconds");
         sleep($delay);
     }
 
-    // Required abstract methods from BaseScraper
-    protected function extractDocumentData(DOMDocument $dom, string $url): ?array
+    // FIX: Implement required abstract methods from BaseScraper
+    protected function extractDocumentData(\DOMDocument $dom, string $url): ?array
     {
         // This method is required by BaseScraper but we use the enhanced scraper instead
         return null;
