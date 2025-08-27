@@ -180,6 +180,7 @@ class DocumentClassifierService
         $documentType = strtolower($document->document_type ?? '');
         $agency = strtolower($document->metadata['agency'] ?? '');
         $metadata = $document->metadata ?? [];
+        $sourceUrl = strtolower($document->source_url ?? '');
         
         $combinedText = "$title $content";
         
@@ -192,6 +193,9 @@ class DocumentClassifierService
         // Special category detection
         $specialCategories = self::detectSpecialCategories($combinedText);
         
+        // Classification by URL
+        $urlCategory = self::classifyByUrl($sourceUrl);
+
         // Calculate confidence scores
         $classifications = [];
         
@@ -202,6 +206,16 @@ class DocumentClassifierService
                 'type' => 'hierarchy',
                 'confidence' => 0.9,
                 'reasoning' => 'Document type classification'
+            ];
+        }
+
+        // Add URL-based classification
+        if ($urlCategory) {
+            $classifications[] = [
+                'category' => $urlCategory,
+                'type' => 'url',
+                'confidence' => 1.0, // Highest confidence
+                'reasoning' => 'URL-based classification'
             ];
         }
         
@@ -230,8 +244,10 @@ class DocumentClassifierService
             return $b['confidence'] <=> $a['confidence'];
         });
         
+        $primaryCategory = $classifications[0]['category'] ?? 'unknown';
+
         return [
-            'primary_category' => $classifications[0]['category'] ?? 'unknown',
+            'primary_category' => substr($primaryCategory, 0, 20),
             'all_classifications' => array_slice($classifications, 0, 5),
             'suggested_tags' => self::generateTags($classifications),
             'classification_metadata' => [
@@ -261,6 +277,21 @@ class DocumentClassifierService
             }
         }
         
+        return null;
+    }
+
+    /**
+     * Classify by URL
+     */
+    private static function classifyByUrl(string $url): ?string
+    {
+        $urlParts = explode('/', $url);
+        $slug = end($urlParts);
+
+        if (str_starts_with($slug, 'permen')) {
+            return 'permen';
+        }
+
         return null;
     }
 

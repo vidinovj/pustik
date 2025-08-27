@@ -41,10 +41,10 @@
         </div>
 
         <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2" for="issue_date">
-                Issue Date:
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="issue_year">
+                Issue Year:
             </label>
-            <input type="date" name="issue_date" id="issue_date" value="{{ old('issue_date') }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            <input type="number" name="issue_year" id="issue_year" value="{{ old('issue_year') }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
         </div>
 
         <div class="mb-4">

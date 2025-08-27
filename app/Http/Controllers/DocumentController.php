@@ -94,7 +94,7 @@ class DocumentController extends Controller
             'title' => $document->title,
             'document_type' => $document->document_type,
             'document_number' => $document->document_number,
-            'issue_date' => $document->issue_date?->format('d-m-Y'),
+            'issue_date' => $document->issue_year,
             'full_text' => $fullText,
             'source_url' => $document->source_url,
             'metadata' => $processedMetadata,
@@ -120,7 +120,7 @@ class DocumentController extends Controller
         $title = preg_replace('/\s+/', '_', trim($title));
         $title = substr($title, 0, 50); // Limit length
         
-        $date = $document->issue_date ? $document->issue_date->format('Y-m-d') : 'no-date';
+        $date = $document->issue_year ?? 'no-year';
         
         return "{$title}_{$date}.txt";
     }

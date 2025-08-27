@@ -50,7 +50,6 @@ class VerifyDatabaseStatus extends Command
                 'tik_relevance_score' => 'Should be INT',
                 'tik_keywords' => 'Should be JSON',
                 'is_tik_related' => 'Should be BOOLEAN',
-                'document_category' => 'Should be VARCHAR'
             ];
 
             foreach ($columns as $column) {

@@ -36,7 +36,7 @@ class FilterMOUMenluController extends Controller
 
         // Filter berdasarkan rentang tanggal disahkan
         if ($request->filled('start_date_disahkan') && $request->filled('end_date_disahkan')) {
-            $query->whereBetween('issue_date', [
+            $query->whereBetween('issue_year', [
                 $request->start_date_disahkan,
                 $request->end_date_disahkan
             ]);
@@ -54,10 +54,10 @@ class FilterMOUMenluController extends Controller
         if ($request->filled('sort_by')) {
             switch ($request->sort_by) {
                 case 'tanggal_disahkan_asc':
-                    $query->orderBy('issue_date', 'asc');
+                    $query->orderBy('issue_year', 'asc');
                     break;
                 case 'tanggal_disahkan_desc':
-                    $query->orderBy('issue_date', 'desc');
+                    $query->orderBy('issue_year', 'desc');
                     break;
                 case 'tanggal_berakhir_asc':
                     $query->orderBy('metadata->tanggal_berakhir', 'asc');

@@ -55,9 +55,9 @@
             <!-- Second Row - Date Ranges -->
             <div class="row g-3 mb-3">
                 <div class="col-md-3">
-                    <label for="start_date_disahkan" class="form-label fw-medium text-secondary">Tanggal Disahkan (Awal)</label>
+                    <label for="start_date_disahkan" class="form-label fw-medium text-secondary">Tahun Disahkan (Awal)</label>
                     <input 
-                        type="date" 
+                        type="number" 
                         id="start_date_disahkan" 
                         name="start_date_disahkan" 
                         value="{{ request('start_date_disahkan') }}" 
@@ -65,9 +65,9 @@
                 </div>
 
                 <div class="col-md-3">
-                    <label for="end_date_disahkan" class="form-label fw-medium text-secondary">Tanggal Disahkan (Akhir)</label>
+                    <label for="end_date_disahkan" class="form-label fw-medium text-secondary">Tahun Disahkan (Akhir)</label>
                     <input 
-                        type="date" 
+                        type="number" 
                         id="end_date_disahkan" 
                         name="end_date_disahkan" 
                         value="{{ request('end_date_disahkan') }}" 
@@ -105,8 +105,8 @@
                         class="form-select" 
                         onchange="this.form.submit()">
                         <option value="" disabled selected>Pilih</option>
-                        <option value="tanggal_disahkan_asc" {{ request('sort_by') == 'tanggal_disahkan_asc' ? 'selected' : '' }}>Tanggal Disahkan (Terbaru)</option>
-                        <option value="tanggal_disahkan_desc" {{ request('sort_by') == 'tanggal_disahkan_desc' ? 'selected' : '' }}>Tanggal Disahkan (Terlama)</option>
+                        <option value="tanggal_disahkan_asc" {{ request('sort_by') == 'tanggal_disahkan_asc' ? 'selected' : '' }}>Tahun Disahkan (Terbaru)</option>
+                        <option value="tanggal_disahkan_desc" {{ request('sort_by') == 'tanggal_disahkan_desc' ? 'selected' : '' }}>Tahun Disahkan (Terlama)</option>
                         <option value="tanggal_berakhir_asc" {{ request('sort_by') == 'tanggal_berakhir_asc' ? 'selected' : '' }}>Tanggal Berakhir (Terbaru)</option>
                         <option value="tanggal_berakhir_desc" {{ request('sort_by') == 'tanggal_berakhir_desc' ? 'selected' : '' }}>Tanggal Berakhir (Terlama)</option>
                     </select>
@@ -132,7 +132,7 @@
                         <th scope="col" class="fw-semibold text-uppercase">Perihal Dokumen</th>
                         <th scope="col" class="fw-semibold text-uppercase">Satker Kemlu Terkait</th>
                         <th scope="col" class="fw-semibold text-uppercase">K/L/I External Terkait</th>
-                        <th scope="col" class="fw-semibold text-uppercase">Tanggal Disahkan</th>
+                        <th scope="col" class="fw-semibold text-uppercase">Tahun Disahkan</th>
                         <th scope="col" class="fw-semibold text-uppercase">Tanggal Berakhir</th>
                         <th scope="col" class="fw-semibold text-uppercase">Status</th>
                         <th scope="col" class="fw-semibold text-uppercase">Aksi</th>
@@ -146,7 +146,7 @@
                             <td class="text-break">{{ $nota->title }}</td>
                             <td>{{ $nota->metadata['satker_kemlu_terkait'] ?? '' }}</td>
                             <td>{{ $nota->metadata['kl_external_terkait'] ?? '' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($nota->issue_date)->format('d-m-Y') }}</td>
+                            <td>{{ $nota->issue_year }}</td>
                             <td>
                                 @if(isset($nota->metadata['tanggal_berakhir']))
                                     {{ \Carbon\Carbon::parse($nota->metadata['tanggal_berakhir'])->format('d-m-Y') }}

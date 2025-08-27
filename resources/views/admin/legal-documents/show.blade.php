@@ -21,8 +21,8 @@
         </div>
 
         <div class="mb-4">
-            <p class="text-gray-700 text-sm font-bold">Issue Date:</p>
-            <p class="text-gray-900">{{ $document->issue_date ? $document->issue_date->format('Y-m-d') : 'N/A' }}</p>
+            <p class="text-gray-700 text-sm font-bold">Issue Year:</p>
+            <p class="text-gray-900">{{ $document->issue_year ?? 'N/A' }}</p>
         </div>
 
         <div class="mb-4">

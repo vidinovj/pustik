@@ -32,10 +32,10 @@ use App\Helpers\MetadataDisplayHelper;
                                     </div>
                                     @endif
                                     
-                                    @if($document->issue_date)
+                                    @if($document->issue_year)
                                     <div class="col-md-6 col-lg-3">
                                         <small class="text-muted d-block">Tanggal Terbit</small>
-                                        <span class="fw-medium">{{ $document->issue_date->format('d F Y') }}</span>
+                                        <span class="fw-medium">{{ $document->issue_year }}</span>
                                     </div>
                                     @endif
                                     
@@ -199,7 +199,8 @@ use App\Helpers\MetadataDisplayHelper;
                 <!-- No Content Available -->
                 <div class="card shadow-sm">
                     <div class="card-body text-center py-5">
-                        <i class="fas fa-file-slash fa-3x text-muted mb-3"></i>
+                        <i class="fas fa-file-slash fa-3x text-muted mb-3">
+                        </i>
                         <h5 class="text-muted">Konten Dokumen Tidak Tersedia</h5>
                         <p class="text-muted">
                             Dokumen ini tidak memiliki konten yang dapat ditampilkan saat ini.

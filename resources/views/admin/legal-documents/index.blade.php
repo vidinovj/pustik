@@ -30,7 +30,7 @@
                         Number
                     </th>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Issue Date
+                        Issue Year
                     </th>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         Status
@@ -59,7 +59,7 @@
                         <p class="text-gray-900 whitespace-no-wrap">{{ $legal_document->document_number ?? 'N/A' }}</p>
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        <p class="text-gray-900 whitespace-no-wrap">{{ $legal_document->issue_date ? $legal_document->issue_date->format('Y-m-d') : 'N/A' }}</p>
+                        <p class="text-gray-900 whitespace-no-wrap">{{ $legal_document->issue_year ?? 'N/A' }}</p>
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                         <span class="relative inline-block px-3 py-1 font-semibold text-green-900 leading-tight">

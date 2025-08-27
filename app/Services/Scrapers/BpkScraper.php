@@ -15,6 +15,8 @@ class BpkScraper extends BaseScraper
 {
     private EnhancedDocumentScraper $enhancedScraper;
     private int $minRelevanceScore = 5;
+    protected ?int $limit = null; // Added property
+    protected bool $dryRun = false; // Added property
 
     // TIK-focused search queries for BPK
     private array $searchQueries = [
@@ -87,9 +89,16 @@ class BpkScraper extends BaseScraper
         $this->minRelevanceScore = $source->config['min_tik_score'] ?? 5;
     }
 
-    public function setMinRelevanceScore(int $score): void
+    // Added setLimit method
+    public function setLimit(int $limit): void
     {
-        $this->minRelevanceScore = $score;
+        $this->limit = $limit;
+    }
+
+    // Added setDryRun method
+    public function setDryRun(bool $dryRun): void
+    {
+        $this->dryRun = $dryRun;
     }
 
     public function scrape(): array
@@ -148,8 +157,9 @@ class BpkScraper extends BaseScraper
                 
                 $this->adaptiveDelay($index, $documentCount);
                 
-                if ($documentCount >= 20) {
-                    Log::channel('legal-documents')->info("BPK: Reached target of 20 relevant documents");
+                // Modified to respect $this->limit
+                if ($this->limit !== null && $documentCount >= $this->limit) {
+                    Log::channel('legal-documents')->info("BPK: Reached target limit of {$this->limit} relevant documents");
                     break;
                 }
                 
@@ -235,7 +245,11 @@ class BpkScraper extends BaseScraper
         $content = $data['full_text'] ?? '';
         $metadata = $data['metadata'] ?? [];
         $relevanceScore = TikTermsService::calculateTikScore($title . ' ' . $content);
+
+        Log::channel('legal-documents')->info("Filtering: Document '{$title}' - Relevance Score: {$relevanceScore}, Min Score: {$this->minRelevanceScore}"); // Added log
+
         if ($relevanceScore < $this->minRelevanceScore) {
+            Log::channel('legal-documents')->debug("Filtering: Document '{$title}' filtered out due to low relevance score."); // Added log
             return null;
         }
         $keywords = TikTermsService::extractTikKeywords($title . ' ' . $content);
@@ -244,7 +258,8 @@ class BpkScraper extends BaseScraper
         $entityInfo = $this->getEntitySourceInfo($url);
         $data['tik_relevance_score'] = $relevanceScore;
         $data['tik_keywords'] = $keywords;
-        $data['is_tik_related'] = true;
+        $data['is_tik_related'] = true; // Assuming it's always true if it passes relevance score
+        Log::channel('legal-documents')->info("Filtering: Document '{$title}' - is_tik_related: {$data['is_tik_related']}"); // Added log
         $data['document_category'] = $documentCategory['category'] ?? 'general_technology';
         $data['metadata'] = array_merge($metadata, [
             'classification' => $documentCategory,
@@ -413,6 +428,14 @@ class BpkScraper extends BaseScraper
 
     private function saveDocumentWithValidation(array $data): ?\App\Models\LegalDocument
     {
+        // Added dryRun check
+        if ($this->dryRun) {
+            Log::channel('legal-documents')->info("DRY RUN: Not saving document: {$data['title']}");
+            
+            // FIX: Return a dummy object for logging purposes
+            return new \App\Models\LegalDocument($data);
+        }
+
         if (empty($data['title']) || strlen($data['title']) < 10) {
             return null;
         }

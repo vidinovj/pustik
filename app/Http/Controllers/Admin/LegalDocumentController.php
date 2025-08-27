@@ -35,12 +35,12 @@ class LegalDocumentController extends Controller
             'title' => 'required|string|max:255',
             'document_type' => 'required|string|max:255',
             'document_number' => 'nullable|string|max:255',
-            'issue_date' => 'nullable|date',
+            'issue_year' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
             'source_url' => 'nullable|url|max:255',
             'full_text' => 'nullable|string',
             'status' => 'required|string|in:active,inactive,pending,draft',
-            // Metadata can be a JSON string or an array
             'metadata' => 'nullable|json',
+            'document_type_code' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -49,7 +49,7 @@ class LegalDocumentController extends Controller
 
         $data = $request->all();
         $data['metadata'] = json_decode($data['metadata'] ?? '{}', true); // Ensure metadata is an array
-        $data['checksum'] = md5($data['title'] . $data['document_type'] . $data['document_number'] . $data['issue_date']);
+        $data['checksum'] = md5($data['title'] . $data['document_type'] . $data['document_number'] . $data['issue_year']);
 
         LegalDocument::create($data);
 
@@ -81,11 +81,12 @@ class LegalDocumentController extends Controller
             'title' => 'required|string|max:255',
             'document_type' => 'required|string|max:255',
             'document_number' => 'nullable|string|max:255',
-            'issue_date' => 'nullable|date',
+            'issue_year' => 'nullable|integer|min:1900|max:' . (date('Y') + 1),
             'source_url' => 'nullable|url|max:255',
             'full_text' => 'nullable|string',
             'status' => 'required|string|in:active,inactive,pending,draft',
             'metadata' => 'nullable|json',
+            'document_type_code' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -94,7 +95,7 @@ class LegalDocumentController extends Controller
 
         $data = $request->all();
         $data['metadata'] = json_decode($data['metadata'] ?? '{}', true); // Ensure metadata is an array
-        $data['checksum'] = md5($data['title'] . $data['document_type'] . $data['document_number'] . $data['issue_date']);
+        $data['checksum'] = md5($data['title'] . $data['document_type'] . $data['document_number'] . $data['issue_year']);
 
         $legal_document->update($data);
 

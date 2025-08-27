@@ -209,7 +209,7 @@ abstract class BaseScraper
                 'title' => $documentData['title'] ?? '',
                 'document_type' => $documentData['document_type'] ?? 'Unknown',
                 'document_number' => $documentData['document_number'] ?? '',
-                'issue_date' => $documentData['issue_date'] ?? null,
+                
                 'source_url' => $documentData['source_url'] ?? '',
                 'metadata' => $documentData['metadata'] ?? [],
                 'full_text' => $documentData['full_text'] ?? '',

@@ -53,6 +53,15 @@ class DocumentsBulkNormalize extends Command
         Artisan::call('documents:fix-tik-column-sync', $options, $this->output);
         $this->newLine();
 
+        // 6. Classify Documents
+        $this->info('🔄 Running documents:classify...');
+        $classifyOptions = $options;
+        if ($force) {
+            $classifyOptions['--force'] = true;
+        }
+        Artisan::call('documents:classify', $classifyOptions, $this->output);
+        $this->newLine();
+
         $this->info('✅ Bulk Document Normalization Completed!');
 
         return Command::SUCCESS;

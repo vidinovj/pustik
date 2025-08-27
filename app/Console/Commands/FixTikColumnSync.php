@@ -58,20 +58,22 @@ class FixTikColumnSync extends Command
                 }
             }
 
-            // 2. Fix document_category from metadata
+            // 2. Fix document_type_code from metadata
+            /*
             $metadataCategory = $tikSummary['primary_category'] ?? null;
-            if ($metadataCategory && $document->document_category !== $metadataCategory) {
-                $changes['document_category'] = [
-                    'from' => $document->document_category ?? 'null',
+            if ($metadataCategory && $document->document_type_code !== $metadataCategory) {
+                $changes['document_type_code'] = [
+                    'from' => $document->document_type_code ?? 'null',
                     'to' => $metadataCategory
                 ];
                 $stats['category_fixed']++;
                 $hasChanges = true;
                 
                 if (!$isDryRun) {
-                    $document->document_category = $metadataCategory;
+                    $document->document_type_code = $metadataCategory;
                 }
             }
+            */
 
             // 3. Sync TIK score from metadata if different
             $metadataTikScore = $tikSummary['tik_score'] ?? 0;

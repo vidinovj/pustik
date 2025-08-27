@@ -14,9 +14,10 @@ class LegalDocument extends Model
     protected $fillable = [
         'title',
         'document_type',
-        'document_number', 
-        'issue_date',
+        'document_number',
+        'issue_year',
         'source_url',
+        'pdf_url',
         'metadata',
         'full_text',
         'document_source_id',
@@ -25,12 +26,11 @@ class LegalDocument extends Model
         'tik_relevance_score',
         'tik_keywords',
         'is_tik_related',
-        'document_category',
+        'document_type_code',
     ];
 
     protected $casts = [
         'metadata' => 'array',
-        'issue_date' => 'date',
         'tik_keywords' => 'array',
     ];
 
@@ -53,7 +53,7 @@ class LegalDocument extends Model
             'document_number' => $this->document_number,
             'full_text' => $this->full_text,
             'metadata' => $this->metadata,
-            'issue_date' => $this->issue_date?->format('Y-m-d'),
+            'issue_year' => $this->issue_year,
         ];
     }
 
@@ -62,7 +62,7 @@ class LegalDocument extends Model
      */
     public function generateChecksum(): string
     {
-        return md5($this->title . $this->document_number . $this->issue_date);
+        return md5($this->title . $this->document_number . $this->issue_year);
     }
 
     /**

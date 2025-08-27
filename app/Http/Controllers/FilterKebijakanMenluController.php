@@ -43,13 +43,13 @@ class FilterKebijakanMenluController extends Controller
         }
 
         if (!empty($filters['tahun_penerbitan'])) {
-            $query->whereYear('issue_date', $filters['tahun_penerbitan']);
+            $query->where('issue_year', $filters['tahun_penerbitan']);
         }
 
         if (!empty($filters['tahun_penerbitan_from']) && !empty($filters['tahun_penerbitan_to'])) {
-            $query->whereBetween('issue_date', [
-                $filters['tahun_penerbitan_from'] . '-01-01', 
-                $filters['tahun_penerbitan_to'] . '-12-31'
+            $query->whereBetween('issue_year', [
+                $filters['tahun_penerbitan_from'], 
+                $filters['tahun_penerbitan_to']
             ]);
         }
 
@@ -67,7 +67,7 @@ class FilterKebijakanMenluController extends Controller
             if ($sortByColumn === 'nomor_kebijakan') {
                 $sortByColumn = 'document_number';
             } elseif ($sortByColumn === 'tahun_penerbitan') {
-                $sortByColumn = 'issue_date';
+                $sortByColumn = 'issue_year';
             }
             Log::info('Mapped sort_by: ' . $sortByColumn);
             Log::info('Sort order: ' . $filters['sort_order']);

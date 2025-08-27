@@ -117,7 +117,7 @@
                         <tr>
                             <td class="text-nowrap">{{ $item->document_type }}</td>
                             <td>{{ $item->document_number }}</td>
-                            <td>{{ \Carbon\Carbon::parse($item->issue_date)->year }}</td>
+                            <td>{{ $item->issue_year }}</td>
                             <td class="text-break">{{ $item->title }}</td>
                             <td>
                                 @if ($item->source_url || $item->full_text)
