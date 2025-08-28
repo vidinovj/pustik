@@ -149,17 +149,9 @@ class EnhancedDocumentScraper
 
     private function generateStealthScript(string $url): string
     {
-        return "
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-
-puppeteer.use(StealthPlugin());
-
-(async () => {
-    try {
-        const browser = await puppeteer.launch({
-            headless: true,
-            args: [
+        return "\nconst puppeteer = require('puppeteer-extra');\nconst StealthPlugin = require('puppeteer-extra-plugin-stealth');\n
+puppeteer.use(StealthPlugin());\n
+(async () => {\n    try {\n        const browser = await puppeteer.launch({\n            headless: true,\n            args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
@@ -168,8 +160,7 @@ puppeteer.use(StealthPlugin());
                 '--no-zygote',
                 '--disable-gpu'
             ]
-        });
-
+        });\n
         const page = await browser.newPage();
         
         // Mimic real user behavior
@@ -245,19 +236,8 @@ puppeteer.use(StealthPlugin());
 
     private function generateSeleniumScript(string $url): string
     {
-        return "
-import json
-import sys
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import time
-import random
-
-try:
-    options = Options()
+        return "\nimport json\nimport sys\nfrom selenium import webdriver\nfrom selenium.webdriver.chrome.options import Options\nfrom selenium.webdriver.common.by import By\nfrom selenium.webdriver.support.ui import WebDriverWait\nfrom selenium.webdriver.support import expected_conditions as EC\nimport time\nimport random\n
+try:\n    options = Options()
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
@@ -330,13 +310,16 @@ except Exception as e:
 
     private function extractPeraturanData(\DOMXPath $xpath, string $url, string $html): ?array
     {
+        // Enhanced PDF URL extraction patterns for BPK site
         $patterns = [
             'title' => [
+                '//h1[contains(@class, "title")]',
                 '//h1',
-                '//title',
+                '//div[@class="document-title"]',
                 '//div[@class="title"]//text()',
                 '//div[contains(@class, "document-title")]//text()',
-                '//*[contains(@class, "judul")]//text()'
+                '//*[contains(@class, "judul")]//text()',
+                '//title'
             ],
             'number' => [
                 '//*[contains(text(), "Nomor")]//text()',
@@ -351,9 +334,17 @@ except Exception as e:
             ],
             'pdf_url' => [
                 '//a[contains(@href, ".pdf")]/@href',
+                '//a[contains(@href, "/pdf/")]/@href',
+                '//a[contains(@href, "download")]/@href',
+                '//a[img[contains(@alt, "PDF")]]/@href',
                 '//a[img[contains(@src, "pdf")]]/@href',
                 '//a[contains(text(), "PDF")]/@href',
-                '//a[contains(text(), "Download")]/@href'
+                '//a[contains(text(), "Download")]/@href',
+                '//a[contains(@class, "pdf")]/@href',
+                '//a[contains(@class, "download")]/@href',
+                '//*[@data-pdf-url]/@data-pdf-url',
+                '//a[contains(@title, "PDF")]/@href',
+                '//a[contains(@title, "Download")]/@href'
             ]
         ];
 
@@ -366,43 +357,189 @@ except Exception as e:
                     $value = trim($nodes->item(0)->textContent ?? $nodes->item(0)->nodeValue ?? '');
                     if (!empty($value)) {
                         $data[$field] = $value;
+                        if ($field === 'pdf_url') {
+                            Log::info("PDF URL found via XPath: {$value} using pattern: {$xpathQuery}");
+                        }
                         break;
                     }
                 }
             }
         }
 
-        // Fallback: extract from raw HTML using regex
-        if (empty($data['title'])) {
-            if (preg_match('/<title[^>]*>(.+?)<\/title>/is', $html, $matches)) {
-                $data['title'] = trim(strip_tags($matches[1]));
+        // Enhanced fallback: Look for PDF links in raw HTML with multiple patterns
+        if (empty($data['pdf_url'])) {
+            $pdfPatterns = [
+                '/<a[^>]*href=["\']([^"\']*.pdf[\'"]*)["\'][^>]*>/i',
+                '/<a[^>]*href=["\']([^"\']*\/pdf\/[^"\']*)["\'][^>]*>/i',
+                '/<a[^>]*href=["\']([^"\']*download[^"\']*.pdf[^"\']*)["\'][^>]*>/i',
+            ];
+            
+            foreach ($pdfPatterns as $pattern) {
+                if (preg_match($pattern, $html, $matches)) {
+                    $data['pdf_url'] = $matches[1];
+                    Log::info("PDF URL found via regex: {$data['pdf_url']} using pattern: {$pattern}");
+                    break;
+                }
             }
         }
 
+        // Fallback: extract title from HTML if XPath failed
+        if (empty($data['title'])) {
+            if (preg_match('/<title[^>]*>(.+?)<\/title>/is', $html, $matches)) {
+                $title = trim(strip_tags($matches[1]));
+                // Filter out generic titles
+                if (!empty($title) && !in_array(strtolower($title), ['bpk', 'loading', 'error', 'untitled'])) {
+                    $data['title'] = $title;
+                }
+            }
+        }
+
+        // Extract data from BPK URL structure
+        $urlData = $this->extractFromBpkUrl($url);
+        if ($urlData) {
+            $data = array_merge($data, $urlData); // URL data as fallback, extracted data takes priority
+        }
+
         // Validate we have minimum required data
-        if (empty($data['title']) && !isset($data['number'])) {
+        if (empty($data['title'])) {
             return null;
         }
 
         return [
             'title' => $data['title'] ?? 'Unknown Document',
-            'document_number' => $data['number'] ?? null,
-            'issue_date' => $this->parseDate($data['date'] ?? ''),
+            'document_number' => $data['document_number'] ?? null,
+            'issue_year' => $data['issue_year'] ?? null,
+            'document_type_code' => $data['document_type_code'] ?? null,
             'pdf_url' => $this->resolveUrl($data['pdf_url'] ?? '', $url),
             'source_url' => $url,
+            'full_text' => $data['title'] ?? '', // Basic full_text, will be enhanced by filtering
             'extracted_at' => now(),
             'extraction_method' => 'enhanced_multi_strategy'
         ];
     }
 
-    private function parseDate(string $dateText): ?string
+    private function extractFromBpkUrl(string $url): array
+    {
+        $data = [];
+        
+        Log::info("=== URL PARSING DEBUG ===");
+        Log::info("Input URL: {$url}");
+        
+        // Step 1: Extract the slug part
+        if (preg_match('#/Details/(\d+)/([^/?]+)#i', $url, $urlMatches)) {
+            $detailId = $urlMatches[1];
+            $fullSlug = $urlMatches[2];
+            
+            Log::info("Detail ID: {$detailId}");
+            Log::info("Full slug: '{$fullSlug}'");
+            
+            // Step 2: Multiple parsing strategies
+            
+            // Strategy 1: Standard pattern
+            if (preg_match('/^(.+?)-no-(\d+)-tahun-(\d{4})$/i', $fullSlug, $matches)) {
+                $typeSlug = $matches[1];
+                $number = $matches[2];
+                $year = $matches[3];
+                
+                Log::info("Strategy 1 success - Type slug: '{$typeSlug}', Number: {$number}, Year: {$year}");
+            }
+            // Strategy 2: Handle variations like "permenlu-no-9-tahun-2018"
+            else if (preg_match('/^([a-z]+(?:[a-z0-9]*)*)-no-(\d+)-tahun-(\d{4})$/i', $fullSlug, $matches)) {
+                $typeSlug = $matches[1];
+                $number = $matches[2]; 
+                $year = $matches[3];
+                
+                Log::info("Strategy 2 success - Type slug: '{$typeSlug}', Number: {$number}, Year: {$year}");
+            }
+            // Strategy 3: Split and parse manually
+            else {
+                $parts = explode('-', $fullSlug);
+                Log::info("Strategy 3 - Manual split: " . json_encode($parts));
+                
+                if (count($parts) >= 5) { // type-no-number-tahun-year
+                    $typeSlug = $parts[0];
+                    $number = $parts[2] ?? null;
+                    $year = $parts[4] ?? null;
+                    
+                    if ($parts[1] === 'no' && $parts[3] === 'tahun' && is_numeric($number) && is_numeric($year)) {
+                        Log::info("Strategy 3 success - Type slug: '{$typeSlug}', Number: {$number}, Year: {$year}");
+                    } else {
+                        Log::warning("Strategy 3 failed - Invalid parts structure");
+                        return $data;
+                    }
+                } else {
+                    Log::warning("Strategy 3 failed - Not enough parts: " . count($parts));
+                    return $data;
+                }
+            }
+            
+            // Now map the type slug to codes
+            $typeMapping = [
+                'uu' => 'uu',
+                'pp' => 'pp',
+                'perpres' => 'perpres', 
+                'keppres' => 'keppres',
+                'inpres' => 'inpres',
+                'perda' => 'perda'
+            ];
+            
+            // All ministry variations map to 'permen'
+            $ministryPrefixes = [
+                'permen', 'permenkominfo', 'permenkomdigi', 'permenkumham', 'permendagri',
+                'permenkes', 'permendikbud', 'permendikbudristek', 'permenkeu', 'permentan',
+                'permenhub', 'permenlu', 'permenristekdikti', 'permenedag', 'permenperin',
+                'permenkopukm', 'permenpopar', 'permenjamsos', 'permenaker', 'permentrans',
+                'permenpan', 'permendesa', 'permenpera', 'permensos', 'permenlhk'
+            ];
+            
+            if (in_array($typeSlug, $ministryPrefixes) || str_starts_with($typeSlug, 'permen')) {
+                $typeMapping[$typeSlug] = 'permen';
+            }
+            
+            $data['document_number'] = $number;
+            $data['issue_year'] = (int)$year;
+            $data['document_type_code'] = $typeMapping[$typeSlug] ?? null;
+            
+            // Derive full document type from code
+            $typeNameMapping = [
+                'uu' => 'Undang-undang',
+                'pp' => 'Peraturan Pemerintah',
+                'perpres' => 'Peraturan Presiden',
+                'permen' => 'Peraturan Menteri',
+                'keppres' => 'Keputusan Presiden',
+                'kepmen' => 'Keputusan Menteri',
+                'inpres' => 'Instruksi Presiden',
+                'perda' => 'Peraturan Daerah'
+            ];
+            
+            $data['document_type'] = $typeNameMapping[$data['document_type_code']] ?? 'Lainnya';
+            
+            Log::info("FINAL RESULT - Code: '{$data['document_type_code']}', Type: '{$data['document_type']}', Number: {$data['document_number']}, Year: {$data['issue_year']}");
+            
+            if (!$data['document_type_code']) {
+                Log::warning("Type mapping failed for slug: '{$typeSlug}'");
+            }
+            
+        } else {
+            Log::warning("Could not match URL pattern for: {$url}");
+        }
+        
+        Log::info("=== END URL PARSING DEBUG ===");
+        
+        return $data;
+    }
+
+    private function parseDate(string $dateText): ?int
     {
         if (preg_match('/(\d{4})/', $dateText, $matches)) {
-            return $matches[1] . '-01-01';
+            $year = (int)$matches[1];
+            // Sanity check for reasonable year range
+            if ($year >= 1945 && $year <= date('Y') + 1) {
+                return $year;
+            }
         }
         return null;
     }
-
     private function resolveUrl(string $relativeUrl, string $baseUrl): ?string
     {
         if (empty($relativeUrl)) return null;

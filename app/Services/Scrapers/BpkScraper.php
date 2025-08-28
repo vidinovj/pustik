@@ -428,11 +428,8 @@ class BpkScraper extends BaseScraper
 
     private function saveDocumentWithValidation(array $data): ?\App\Models\LegalDocument
     {
-        // Added dryRun check
         if ($this->dryRun) {
             Log::channel('legal-documents')->info("DRY RUN: Not saving document: {$data['title']}");
-            
-            // FIX: Return a dummy object for logging purposes
             return new \App\Models\LegalDocument($data);
         }
 
@@ -440,45 +437,48 @@ class BpkScraper extends BaseScraper
             return null;
         }
         
-        // FIX: Use correct database field names
+        // Prioritize URL-extracted document_type_code over title extraction
+        $documentTypeCode = $data['document_type_code'] ?? null;
+        $documentType = $data['document_type'] ?? $this->extractDocumentType($data['title']);
+        
+        // If we have type code but no full type name, derive it
+        if ($documentTypeCode && $documentType === 'Lainnya') {
+            $typeMapping = [
+                'uu' => 'Undang-undang',
+                'pp' => 'Peraturan Pemerintah',
+                'perpres' => 'Peraturan Presiden',
+                'permen' => 'Peraturan Menteri',
+                'keppres' => 'Keputusan Presiden',
+                'kepmen' => 'Keputusan Menteri',
+                'inpres' => 'Instruksi Presiden'
+            ];
+            $documentType = $typeMapping[$documentTypeCode] ?? 'Lainnya';
+        }
+        
         $cleanData = [
             'title' => $this->cleanText($data['title']),
-            'document_type' => $data['document_type'] ?? $this->extractDocumentType($data['title']),
+            'document_type' => $documentType,
             'document_number' => $data['document_number'] ?? null,
-            'issue_date' => $data['issue_date'] ?? null,
+            'issue_year' => $data['issue_year'] ?? null,
             'source_url' => $data['source_url'],
             'pdf_url' => $data['pdf_url'] ?? null,
-            'full_text' => $data['full_text'] ?? $data['title'], // FIX: Ensure full_text is populated
-            'document_source_id' => $this->source->id, // FIX: Use correct field name
-            'status' => 'active', // FIX: Add required status field
+            'full_text' => $data['full_text'] ?? $data['title'],
+            'document_source_id' => $this->source->id,
+            'status' => 'active',
             'metadata' => $data['metadata'] ?? [],
             'tik_relevance_score' => $data['tik_relevance_score'] ?? 0,
             'tik_keywords' => $data['tik_keywords'] ?? [],
             'is_tik_related' => $data['is_tik_related'] ?? false,
-            'document_category' => $data['document_category'] ?? null,
-            'checksum' => md5($data['title'] . ($data['document_number'] ?? '') . ($data['issue_date'] ?? '')) // FIX: Add checksum
+            'document_type_code' => $documentTypeCode,
+            'checksum' => md5($data['title'] . ($data['document_number'] ?? '') . ($data['issue_year'] ?? ''))
         ];
+        
+        Log::info("Saving document with type_code: {$documentTypeCode}, type: {$documentType}");
         
         return $this->saveDocument($cleanData);
     }
 
-    private function extractDocumentType(string $title): string
-    {
-        $types = [
-            'undang-undang' => 'Undang-Undang',
-            'peraturan pemerintah' => 'Peraturan Pemerintah',
-            'peraturan presiden' => 'Peraturan Presiden',
-            'peraturan menteri' => 'Peraturan Menteri',
-            'keputusan presiden' => 'Keputusan Presiden',
-        ];
-        $titleLower = strtolower($title);
-        foreach ($types as $pattern => $type) {
-            if (stripos($titleLower, $pattern) !== false) {
-                return $type;
-            }
-        }
-        return 'Unknown';
-    }
+    
 
     private function adaptiveDelay(int $index, int $successCount): void
     {
@@ -506,5 +506,84 @@ class BpkScraper extends BaseScraper
     {
         // This method is required by BaseScraper but we handle URL discovery differently
         return [];
+    }
+
+    public function debugPdfExtraction(string $url): array
+    {
+        Log::info("=== DEBUG PDF EXTRACTION ===");
+        Log::info("URL: {$url}");
+        
+        $documentData = $this->enhancedScraper->scrapeWithStrategies($url, ['basic']);
+        
+        if ($documentData) {
+            Log::info("Raw extracted data:");
+            Log::info("- Title: " . ($documentData['title'] ?? 'None'));
+            Log::info("- PDF URL: " . ($documentData['pdf_url'] ?? 'None'));
+            Log::info("- Source URL: " . ($documentData['source_url'] ?? 'None'));
+            
+            $enrichedData = $this->applyFiltering($documentData, $url);
+            if ($enrichedData) {
+                Log::info("Enriched data:");
+                Log::info("- PDF URL: " . ($enrichedData['pdf_url'] ?? 'None'));
+            }
+        } else {
+            Log::info("No document data extracted");
+        }
+        
+        return $documentData ?? [];
+    }
+
+    private function extractDocumentType(string $title): string
+    {
+        $titleLower = strtolower($title);
+        
+        // Enhanced patterns for Indonesian document types
+        $types = [
+            'uu' => [
+                'patterns' => ['undang-undang', 'uu no', 'uu nomor', 'law no'],
+                'name' => 'Undang-undang'
+            ],
+            'pp' => [
+                'patterns' => ['peraturan pemerintah', 'pp no', 'pp nomor', 'government regulation'],
+                'name' => 'Peraturan Pemerintah'
+            ],
+            'perpres' => [
+                'patterns' => ['peraturan presiden', 'perpres no', 'perpres nomor', 'presidential regulation'],
+                'name' => 'Peraturan Presiden'
+            ],
+            'permen' => [
+                'patterns' => [
+                    'peraturan menteri', 'permen', 'peraturan mentri',
+                    'menteri komunikasi', 'menteri luar negeri', 'menteri dalam negeri',
+                    'menteri keuangan', 'menteri kesehatan', 'menteri pendidikan',
+                    'ministerial regulation'
+                ],
+                'name' => 'Peraturan Menteri'
+            ],
+            'keppres' => [
+                'patterns' => ['keputusan presiden', 'keppres no', 'keppres nomor', 'presidential decree'],
+                'name' => 'Keputusan Presiden'
+            ],
+            'kepmen' => [
+                'patterns' => ['keputusan menteri', 'kepmen', 'ministerial decree'],
+                'name' => 'Keputusan Menteri'
+            ],
+            'inpres' => [
+                'patterns' => ['instruksi presiden', 'inpres no', 'inpres nomor', 'presidential instruction'],
+                'name' => 'Instruksi Presiden'
+            ]
+        ];
+        
+        foreach ($types as $code => $config) {
+            foreach ($config['patterns'] as $pattern) {
+                if (stripos($titleLower, $pattern) !== false) {
+                    Log::info("Document type extracted from title: {$config['name']} (code: {$code}) via pattern: {$pattern}");
+                    return $config['name'];
+                }
+            }
+        }
+        
+        Log::warning("Could not extract document type from title: {$title}");
+        return 'Lainnya';
     }
 }

@@ -194,7 +194,7 @@ abstract class BaseScraper
             $checksum = md5(
                 ($documentData['title'] ?? '') . 
                 ($documentData['document_number'] ?? '') . 
-                ($documentData['issue_date'] ?? '')
+                ($documentData['issue_year'] ?? '')
             );
 
             // Check for duplicates
@@ -209,13 +209,18 @@ abstract class BaseScraper
                 'title' => $documentData['title'] ?? '',
                 'document_type' => $documentData['document_type'] ?? 'Unknown',
                 'document_number' => $documentData['document_number'] ?? '',
-                
+                'issue_year' => $documentData['issue_year'] ?? null,
                 'source_url' => $documentData['source_url'] ?? '',
+                'pdf_url' => $documentData['pdf_url'] ?? null, // ADD THIS
                 'metadata' => $documentData['metadata'] ?? [],
                 'full_text' => $documentData['full_text'] ?? '',
                 'document_source_id' => $this->source->id,
                 'status' => 'active',
                 'checksum' => $checksum,
+                'document_type_code' => $documentData['document_type_code'] ?? null, // ADD THIS
+                'tik_relevance_score' => $documentData['tik_relevance_score'] ?? 0, // ADD THIS
+                'tik_keywords' => $documentData['tik_keywords'] ?? [], // ADD THIS
+                'is_tik_related' => $documentData['is_tik_related'] ?? false, // ADD THIS
             ]);
 
             Log::channel('legal-documents')->info("Document saved: {$document->title}");
