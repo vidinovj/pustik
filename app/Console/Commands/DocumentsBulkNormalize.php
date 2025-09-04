@@ -24,22 +24,27 @@ class DocumentsBulkNormalize extends Command
             $options['--dry-run'] = true;
         }
 
-        // 1. Normalize Metadata
+        // 1. Normalize from URL (NEW)
+        $this->info('🔄 Running documents:normalize-from-url...');
+        Artisan::call('documents:normalize-from-url', $options, $this->output);
+        $this->newLine();
+
+        // 2. Normalize Metadata
         $this->info('🔄 Running documents:normalize-metadata...');
         Artisan::call('documents:normalize-metadata', $options, $this->output);
         $this->newLine();
 
-        // 2. Normalize Columns
+        // 3. Normalize Columns
         $this->info('🔄 Running documents:normalize-columns...');
         Artisan::call('documents:normalize-columns', $options, $this->output);
         $this->newLine();
 
-        // 3. Normalize Document Numbers
+        // 4. Normalize Document Numbers
         $this->info('🔄 Running documents:normalize-document-numbers...');
         Artisan::call('documents:normalize-document-numbers', $options, $this->output);
         $this->newLine();
 
-        // 4. Update TIK Scores
+        // 5. Update TIK Scores
         $this->info('🔄 Running documents:update-tik-scores...');
         $tikScoreOptions = $options;
         if ($force) {
@@ -48,12 +53,12 @@ class DocumentsBulkNormalize extends Command
         Artisan::call('documents:update-tik-scores', $tikScoreOptions, $this->output);
         $this->newLine();
 
-        // 5. Fix TIK Column Sync (NEW)
+        // 6. Fix TIK Column Sync (NEW)
         $this->info('🔄 Running documents:fix-tik-column-sync...');
         Artisan::call('documents:fix-tik-column-sync', $options, $this->output);
         $this->newLine();
 
-        // 6. Classify Documents
+        // 7. Classify Documents
         $this->info('🔄 Running documents:classify...');
         $classifyOptions = $options;
         if ($force) {

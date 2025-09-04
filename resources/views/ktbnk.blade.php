@@ -55,12 +55,12 @@
             <!-- Second Row - Additional Filters -->
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
-                    <label for="perihal" class="form-label fw-medium text-secondary">Perihal</label>
+                    <label for="perihal_kebijakan" class="form-label fw-medium text-secondary">Perihal</label>
                     <input 
                         type="text" 
-                        id="perihal" 
-                        name="perihal" 
-                        value="{{ request('perihal') }}" 
+                        id="perihal_kebijakan" 
+                        name="perihal_kebijakan" 
+                        value="{{ request('perihal_kebijakan') }}" 
                         placeholder="Perihal" 
                         class="form-control">
                 </div>
@@ -116,42 +116,96 @@
 
         <!-- Results Table -->
         <div class="table-responsive">
-            <table class="table table-custom table-hover">
+            <table class="table table-custom table-hover table-striped">
                 <thead class="thead-custom">
                     <tr>
                         <th scope="col" class="fw-semibold text-uppercase">Jenis Kebijakan</th>
                         <th scope="col" class="fw-semibold text-uppercase">Nomor Kebijakan</th>
                         <th scope="col" class="fw-semibold text-uppercase">Tahun Penerbitan</th>
-                        <th scope="col" class="fw-semibold text-uppercase">Perihal</th>
+                        <th scope="col" class="fw-semibold text-uppercase">Perihal Kebijakan</th>
                         <th scope="col" class="fw-semibold text-uppercase">Instansi</th>
-                        <th scope="col" class="fw-semibold text-uppercase">Aksi</th>
+                        <th scope="col" class="fw-semibold text-uppercase text-center" style="width: 160px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="tbody-custom">
                     @forelse($kebijakan as $item)
                         <tr>
-                            <td>{{ $item->document_type }}</td>
+                            <td class="text-nowrap">{{ $item->document_type }}</td>
                             <td>{{ $item->document_number }}</td>
                             <td>{{ $item->issue_year }}</td>
-                            <td class="text-break">{{ $item->title }}</td>
-                            <td>{{ $item->metadata['agency'] ?? '' }}</td>
+                            <td class="text-break">
+                                {{ $item->title }}
+                                
+                                {{-- Document type indicator --}}
+                                <div class="mt-1">
+                                    @if($item->pdf_url)
+                                        <span class="badge bg-success bg-opacity-10 text-success">
+                                            <i class="fas fa-file-pdf me-1"></i>PDF Tersedia
+                                        </span>
+                                    @elseif($item->source_url)
+                                        <span class="badge bg-info bg-opacity-10 text-info">
+                                            <i class="fas fa-link me-1"></i>Link Eksternal
+                                        </span>
+                                    @elseif($item->full_text)
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                            <i class="fas fa-file-text me-1"></i>Teks Tersedia
+                                        </span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td>{{ $item->metadata['agency'] ?? 'N/A' }}</td>
                             <td>
-                                @if ($item->source_url || $item->full_text)
+                                @if ($item->pdf_url || $item->source_url || $item->full_text)
                                     <div class="btn-group" role="group">
-                                        <a 
-                                            href="{{ route('documents.show', $item) }}" 
-                                            class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye me-1"></i>
-                                            Lihat
+                                        <!-- View Details Button -->
+                                        <a href="{{ route('documents.show', $item) }}" class="btn btn-sm btn-outline-secondary" title="Lihat Detail">
+                                            <i class="fas fa-info-circle"></i>
                                         </a>
+
+                                        <!-- Quick View Modal Button -->
                                         <button 
                                             type="button" 
-                                            class="btn btn-sm btn-outline-secondary btn-quick-view"
+                                            class="btn btn-sm btn-outline-primary btn-quick-view"
                                             data-document-id="{{ $item->id }}"
-                                            data-document-url="{{ route('documents.show', $item) }}"
                                             title="Pratinjau Cepat">
-                                            <i class="fas fa-search"></i>
+                                            <i class="fas fa-eye"></i>
                                         </button>
+
+                                        <!-- Download Button -->
+                                        <a 
+                                            href="{{ route('documents.download', $item) }}" 
+                                            class="btn btn-sm btn-outline-success"
+                                            title="Download {{ $item->pdf_url ? 'PDF' : 'Dokumen' }}">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+
+                                        <!-- Direct PDF View Button (only if PDF exists) -->
+                                        @if($item->pdf_url)
+                                            <a 
+                                                href="{{ route('documents.pdf-proxy', $item) }}" 
+                                                class="btn btn-sm btn-outline-info" 
+                                                target="_blank"
+                                                title="Buka PDF di tab baru">
+                                                <i class="fas fa-external-link-alt"></i>
+                                            </a>
+                                        @endif
+                                    </div>
+
+                                    {{-- Status indicator below buttons --}}
+                                    <div class="mt-1">
+                                        @if($item->pdf_url)
+                                            <small class="text-success">
+                                                <i class="fas fa-file-pdf me-1"></i>PDF
+                                            </small>
+                                        @elseif($item->source_url)
+                                            <small class="text-info">
+                                                <i class="fas fa-link me-1"></i>Link
+                                            </small>
+                                        @elseif($item->full_text)
+                                            <small class="text-secondary">
+                                                <i class="fas fa-file-text me-1"></i>Teks
+                                            </small>
+                                        @endif
                                     </div>
                                 @else
                                     <span class="text-muted">Tidak tersedia</span>
@@ -160,7 +214,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">Tidak ada data yang ditemukan.</td>
+                            <td colspan="6" class="text-center py-4 text-muted">Data kebijakan tidak tersedia.</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -10,6 +10,7 @@ use App\Http\Controllers\FilterKebijakanBukanMenluController;
 use App\Http\Controllers\FilterMOUMenluController;
 use App\Http\Controllers\HomeControllerAwal;
 
+
 // Home route
 Route::get('/', [HomeControllerAwal::class, 'index'])->name('home');
 
@@ -46,7 +47,23 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
+// Rute untuk dokumen
+Route::prefix('documents')->name('documents.')->group(function () {
+    // Main document view
+    Route::get('/{document}', [DocumentController::class, 'show'])->name('show');
+    
+    // Download - now prioritizes pdf_url over source_url
+    Route::get('/{document}/download', [DocumentController::class, 'download'])->name('download');
+    
+    // AJAX content for modal (includes pdf_url)
+    Route::get('/{document}/content', [DocumentController::class, 'content'])->name('content');
+    
+    // PDF proxy route (if CORS issues occur)
+    Route::get('/{document}/pdf-proxy', [DocumentController::class, 'pdfProxy'])->name('pdf-proxy');
+    
+    // Debug route (remove in production)
+    Route::get('/{document}/debug', [DocumentController::class, 'debug'])->name('debug');
+});
 
 // Rute autentikasi
 require __DIR__.'/auth.php';

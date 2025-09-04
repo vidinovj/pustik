@@ -124,7 +124,7 @@
 
         <!-- Results Table -->
         <div class="table-responsive">
-            <table class="table table-custom table-hover">
+            <table class="table table-custom table-hover table-striped">
                 <thead class="thead-custom">
                     <tr>
                         <th scope="col" class="fw-semibold text-uppercase">No</th>
@@ -170,22 +170,40 @@
                                 @endif
                             </td>
                             <td>
-                                @if ($nota->source_url || $nota->full_text)
+                                @if ($nota->pdf_url || $nota->source_url || $nota->full_text)
                                     <div class="btn-group" role="group">
-                                        <a 
-                                            href="{{ route('documents.show', $nota) }}" 
-                                            class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye me-1"></i>
-                                            Lihat
+                                        <!-- View Details Button -->
+                                        <a href="{{ route('documents.show', $nota) }}" class="btn btn-sm btn-outline-secondary" title="Lihat Detail">
+                                            <i class="fas fa-info-circle"></i>
                                         </a>
+
+                                        <!-- Quick View Modal Button -->
                                         <button 
                                             type="button" 
-                                            class="btn btn-sm btn-outline-secondary btn-quick-view"
+                                            class="btn btn-sm btn-outline-primary btn-quick-view"
                                             data-document-id="{{ $nota->id }}"
-                                            data-document-url="{{ route('documents.show', $nota) }}"
                                             title="Pratinjau Cepat">
-                                            <i class="fas fa-search"></i>
+                                            <i class="fas fa-eye"></i>
                                         </button>
+
+                                        <!-- Download Button -->
+                                        <a 
+                                            href="{{ route('documents.download', $nota) }}" 
+                                            class="btn btn-sm btn-outline-success"
+                                            title="Download {{ $nota->pdf_url ? 'PDF' : 'Dokumen' }}">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+
+                                        <!-- Direct PDF View Button (only if PDF exists) -->
+                                        @if($nota->pdf_url)
+                                            <a 
+                                                href="{{ route('documents.pdf-proxy', $nota) }}" 
+                                                class="btn btn-sm btn-outline-info" 
+                                                target="_blank"
+                                                title="Buka PDF di tab baru">
+                                                <i class="fas fa-external-link-alt"></i>
+                                            </a>
+                                        @endif
                                     </div>
                                 @else
                                     <span class="text-muted">Tidak tersedia</span>

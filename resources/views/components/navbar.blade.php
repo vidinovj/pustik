@@ -1,5 +1,5 @@
 {{-- resources/views/components/navbar.blade.php --}}
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark" x-data="{ isOpen: false }">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-custom" x-data="{ isOpen: false }">
     <div class="container-fluid px-4">
         <!-- Logo -->
         <a class="navbar-brand d-flex align-items-center" href="/">

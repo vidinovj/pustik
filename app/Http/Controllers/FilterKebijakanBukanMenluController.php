@@ -31,8 +31,7 @@ class FilterKebijakanBukanMenluController extends Controller
         });
 
         if (!empty($filters['jenis_kebijakan'])) {
-            // This filter is now handled by the initial where clause on document_type
-            // If you need to filter by original jenis_kebijakan, you'd query metadata JSON
+            $query->where('document_type', 'like', '%' . $filters['jenis_kebijakan'] . '%');
         }
         if (!empty($filters['nomor_kebijakan'])) {
             $query->where('document_number', 'like', '%' . $filters['nomor_kebijakan'] . '%');

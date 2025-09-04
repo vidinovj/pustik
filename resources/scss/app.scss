@@ -1,8 +1,8 @@
 // resources/scss/app.scss
 
 // Custom color variables to match current theme
-$primary: #3b82f6;          // blue-500
-$primary-hover: #2563eb;    // blue-600
+$primary: #2340BA;          // new primary
+$primary-hover: #3F59C4;    // new primary hover
 $secondary: #6b7280;        // gray-500
 $light: #f3f4f6;           // gray-100
 $dark: #374151;            // gray-700
@@ -89,4 +89,8 @@ $theme-colors: (
 .table-responsive {
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.navbar-custom {
+    background-color: #2340BA !important;
 }

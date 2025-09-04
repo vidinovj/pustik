@@ -7,8 +7,6 @@
 
     <div class="container mx-auto px-4">
         <div class="bg-white rounded-lg shadow-lg p-6 mt-4">
-            <h1 class="text-3xl font-bold text-gray-800 mb-4">Selamat Datang di Pustik Kemlu</h1>
-            <p class="text-gray-600 mb-4">Silahkan pilih menu di atas untuk melihat:</p>
             <div class="grid md:grid-cols-3 gap-4">
                 <div class="bg-blue-50 p-4 rounded-lg">
                     <h2 class="text-xl font-semibold text-blue-800 mb-2">Kebijakan TIK by Kemlu</h2>
