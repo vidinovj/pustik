@@ -1,6 +1,6 @@
 {{-- resources/views/ktbk.blade.php --}}
 <x-layout>
-    <x-slot:title>Kebijakan TIK by Kemlu</x-slot:title>
+    <x-slot:title>Kebijakan TIK Internal</x-slot:title>
 
     <div class="container-fluid px-4 py-3">
         <!-- Filter Form -->

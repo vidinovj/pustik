@@ -3,7 +3,7 @@
     <!-- Title Section -->
     <div class="text-center mb-4">
         <h1 class="h2 fw-bold mb-3" style="color: #1e40af;">Daftar Akun Baru</h1>
-        <p class="text-muted">Buat akun untuk mengakses Pustik Kemlu</p>
+        <p class="text-muted">Buat akun untuk mengakses Aplikasi Pusdatin</p>
     </div>
 
     <!-- Register Form -->

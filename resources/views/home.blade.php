@@ -4,14 +4,14 @@
     
     <div class="d-flex flex-column align-items-center justify-content-center min-vh-100 pb-4 pt-2">
         <div class="text-center text-white mb-5">
-            <h1 class="display-4 fw-bold text-shadow">Sistem Manajemen Dokumen Kebijakan TIK Pustik KP</h1>
+            <h1 class="display-4 fw-bold text-shadow">Sistem Manajemen Dokumen <br> Pusat Data dan Teknologi Informasi <br> Kementerian Luar Negeri RI</h1>
         </div>
 
         <div class="w-100" style="max-width: 1100px;">
             <!-- Menu Cards Container -->
-            <div class="bg-white rounded-3 shadow-lg p-4 {{ request()->is('/') ? 'bg-opacity-95' : '' }}">                
+            <div class="bg-white rounded-3 shadow-lg p-4 {{ request()->is('/') ? 'bg-opacity-95' : '' }}">
                 <div class="row g-3 justify-content-center">
-                    <!-- Kebijakan TIK by Kemlu Section -->
+                    <!-- Kebijakan TIK Internal Section -->
                     <div class="col-lg-4 col-md-6">
                         <div class="card h-100 border-0 shadow-sm hover-card" style="background-color: #dbeafe;">
                             <div class="card-body d-flex flex-column p-3">
@@ -19,7 +19,7 @@
                                     <i class="fas fa-building fa-2x mb-2" style="color: #1e40af;"></i>
                                 </div>
                                 <h2 class="h6 fw-semibold mb-2 text-center" style="color: #1e40af;">
-                                    Kebijakan TIK by Kemlu
+                                    Kebijakan TIK Internal
                                 </h2>
                                 <p class="text-muted text-center flex-grow-1 small">
                                     Kebijakan teknologi informasi dan komunikasi yang dikeluarkan oleh Kementerian Luar Negeri.
@@ -33,7 +33,7 @@
                         </div>
                     </div>
                     
-                    <!-- Kebijakan TIK by Non Kemlu Section -->
+                    <!-- Kebijakan TIK Eksternal Section -->
                     <div class="col-lg-4 col-md-6">
                         <div class="card h-100 border-0 shadow-sm hover-card" style="background-color: #dcfce7;">
                             <div class="card-body d-flex flex-column p-3">
@@ -41,7 +41,7 @@
                                     <i class="fas fa-users fa-2x mb-2" style="color: #166534;"></i>
                                 </div>
                                 <h2 class="h6 fw-semibold mb-2 text-center" style="color: #166534;">
-                                    Kebijakan TIK by Non Kemlu
+                                    Kebijakan TIK Eksternal
                                 </h2>
                                 <p class="text-muted text-center flex-grow-1 small">
                                     Kebijakan teknologi informasi dan komunikasi yang dikeluarkan oleh instansi selain Kemlu.
@@ -55,7 +55,7 @@
                         </div>
                     </div>
                     
-                    <!-- Nota Kesepahaman (MoU) dan PKS Section -->
+                    <!-- Pusdatin Section -->
                     <div class="col-lg-4 col-md-6">
                         <div class="card h-100 border-0 shadow-sm hover-card" style="background-color: #f3e8ff;">
                             <div class="card-body d-flex flex-column p-3">
@@ -63,10 +63,10 @@
                                     <i class="fas fa-handshake fa-2x mb-2" style="color: #7c3aed;"></i>
                                 </div>
                                 <h2 class="h6 fw-semibold mb-2 text-center" style="color: #7c3aed;">
-                                    Nota Kesepahaman (MoU) dan PKS
+                                    Nota Kesepahaman dan lainnya
                                 </h2>
                                 <p class="text-muted text-center flex-grow-1 small">
-                                    Dokumen kerja sama dan nota kesepahaman dengan berbagai instansi.
+                                    Dokumen kerja sama, nota kesepahaman, dan dokumen internal Pusdatin.
                                 </p>
                                 <div class="text-center mt-2">
                                     <a href="{{ route('nkmdp') }}" class="btn btn-sm" 

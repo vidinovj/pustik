@@ -42,7 +42,7 @@ $theme-colors: (
 }
 
 .form-container {
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0.95);
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
@@ -87,10 +87,21 @@ $theme-colors: (
 
 // Responsive table improvements
 .table-responsive {
+  background-color: rgba(255, 255, 255, 0.95);
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .navbar-custom {
     background-color: #2340BA !important;
+}
+
+// Fade-in animation
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
 }

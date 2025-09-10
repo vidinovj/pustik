@@ -69,7 +69,7 @@ class FilterKebijakanBukanMenluController extends Controller
 
         // Return view with filtered and sorted data
         return view('ktbnk', [
-            'title' => 'Kebijakan TIK Bukan Kemlu',
+            'title' => 'Kebijakan TIK Eksternal',
             'kebijakan' => $kebijakan
         ]);
     }

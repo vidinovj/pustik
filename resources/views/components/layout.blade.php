@@ -25,14 +25,14 @@
     </style>
 </head>
 
-<body class="h-100 {{ request()->is('/') ? 'homepage-background' : 'bg-light' }} min-vh-100">
+<body class="h-100 homepage-background min-vh-100">
 
-<div class="d-flex flex-column min-vh-100 {{ request()->is('/') ? 'homepage-overlay' : '' }}">
+<div class="d-flex flex-column min-vh-100 homepage-overlay">
    <x-navbar></x-navbar>
   
    <x-header>{{$title}}</x-header>
 
-    <main class="flex-grow-1 d-flex align-items-center">
+    <main class="flex-grow-1 d-flex align-items-center fade-in">
       <div class="container-fluid">
         <!-- Your content -->
        {{ $slot }}

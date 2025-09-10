@@ -22,17 +22,17 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {{ request()->is('ktbk*') ? 'active' : '' }}" href="/ktbk">
-                        Kebijakan TIK by Kemlu
+                        Kebijakan Internal
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {{ request()->is('ktbnk*') ? 'active' : '' }}" href="/ktbnk">
-                        Kebijakan TIK by Non Kemlu
+                        Kebijakan Eksternal
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {{ request()->is('nkmdp*') ? 'active' : '' }}" href="/nkmdp">
-                        Nota Kesepahaman (MoU) dan PKS
+                        Pusdatin
                     </a>
                 </li>
             </ul>

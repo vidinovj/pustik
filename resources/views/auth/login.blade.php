@@ -2,8 +2,8 @@
 <x-guest-layout>
     <!-- Logo and Title Section -->
     <div class="text-center mb-4">
-        <img src="{{ asset('images/pustik.jpg') }}" alt="Pustik Logo" class="mx-auto d-block mb-3" style="width: 256px; height: 256px; object-fit: contain;">
-        <h1 class="h2 fw-bold mb-4" style="color: #1e40af;">Masuk ke Pustik Kemlu</h1>
+        <img src="{{ asset('images/pusdatin.jpg') }}" alt="Pusdatin Logo" class="mx-auto d-block mb-3" style="width: 256px; height: 256px; object-fit: contain;">
+        <h1 class="h2 fw-bold mb-4" style="color: #1e40af;">Masuk ke Pusdatin Kemlu</h1>
     </div>
 
     <!-- Login Form -->

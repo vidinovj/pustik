@@ -9,12 +9,12 @@
         <div class="bg-white rounded-lg shadow-lg p-6 mt-4">
             <div class="grid md:grid-cols-3 gap-4">
                 <div class="bg-blue-50 p-4 rounded-lg">
-                    <h2 class="text-xl font-semibold text-blue-800 mb-2">Kebijakan TIK by Kemlu</h2>
+                    <h2 class="text-xl font-semibold text-blue-800 mb-2">Kebijakan TIK Internal</h2>
                     <p class="text-gray-600">Kebijakan teknologi informasi dan komunikasi yang dikeluarkan oleh Kementerian Luar Negeri.</p>
                     <a href="{{ route('ktbk') }}" class="mt-4 inline-block text-blue-600 hover:text-blue-800">Lihat detail →</a>
                 </div>
                 <div class="bg-green-50 p-4 rounded-lg">
-                    <h2 class="text-xl font-semibold text-green-800 mb-2">Kebijakan TIK by Non Kemlu</h2>
+                    <h2 class="text-xl font-semibold text-green-800 mb-2">Kebijakan TIK Eksternal</h2>
                     <p class="text-gray-600">Kebijakan teknologi informasi dan komunikasi yang dikeluarkan oleh instansi selain Kemlu.</p>
                     <a href="{{ route('ktbnk') }}" class="mt-4 inline-block text-green-600 hover:text-green-800">Lihat detail →</a>
                 </div>
