@@ -1,10 +1,9 @@
-{{-- resources/views/nkmdp.blade.php --}}
 <x-layout>
     <x-slot:title>{{ $title }}</x-slot:title>
 
     <div class="container-fluid px-4 py-3">
         <!-- Filter Form -->
-        <form method="GET" action="{{ url('nkmdp') }}" class="form-container p-4 mb-4">
+        <form method="GET" action="{{ url('pusdatin') }}" class="form-container p-4 mb-4">
             <!-- First Row - Document & Related Info -->
             <div class="row g-3 mb-3">
                 <div class="col-md-3">
@@ -128,7 +127,7 @@
                 <thead class="thead-custom">
                     <tr>
                         <th scope="col" class="fw-semibold text-uppercase">No</th>
-                        <th scope="col" class="fw-semibold text-uppercase">MoU/PKS</th>
+                        <th scope="col" class="fw-semibold text-uppercase">Jenis Dokumen</th>
                         <th scope="col" class="fw-semibold text-uppercase">Perihal Dokumen</th>
                         <th scope="col" class="fw-semibold text-uppercase">Satker Kemlu Terkait</th>
                         <th scope="col" class="fw-semibold text-uppercase">K/L/I External Terkait</th>
@@ -139,25 +138,25 @@
                     </tr>
                 </thead>
                 <tbody class="tbody-custom">
-                    @forelse($notaKesepahaman as $index => $nota)
+                    @forelse($documents as $index => $document)
                         <tr>
                             <td>{{ $index + 1 }}</td>
-                            <td>{{ $nota->document_type }}</td>
-                            <td class="text-break">{{ $nota->title }}</td>
-                            <td>{{ $nota->metadata['satker_kemlu_terkait'] ?? '' }}</td>
-                            <td>{{ $nota->metadata['kl_external_terkait'] ?? '' }}</td>
-                            <td>{{ $nota->issue_year }}</td>
+                            <td>{{ $document->document_type }}</td>
+                            <td class="text-break">{{ $document->title }}</td>
+                            <td>{{ $document->metadata['satker_kemlu_terkait'] ?? '' }}</td>
+                            <td>{{ $document->metadata['kl_external_terkait'] ?? '' }}</td>
+                            <td>{{ $document->issue_year }}</td>
                             <td>
-                                @if(isset($nota->metadata['tanggal_berakhir']))
-                                    {{ \Carbon\Carbon::parse($nota->metadata['tanggal_berakhir'])->format('d-m-Y') }}
+                                @if(isset($document->metadata['tanggal_berakhir']))
+                                    {{ \Carbon\Carbon::parse($document->metadata['tanggal_berakhir'])->format('d-m-Y') }}
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>
                             <td>
-                                @if(isset($nota->metadata['tanggal_berakhir']))
+                                @if(isset($document->metadata['tanggal_berakhir']))
                                     @php
-                                        $tanggalBerakhir = \Carbon\Carbon::parse($nota->metadata['tanggal_berakhir']);
+                                        $tanggalBerakhir = \Carbon\Carbon::parse($document->metadata['tanggal_berakhir']);
                                         $sekarang = \Carbon\Carbon::now();
                                     @endphp
                                     @if($tanggalBerakhir->isFuture())
@@ -170,10 +169,10 @@
                                 @endif
                             </td>
                             <td>
-                                @if ($nota->pdf_url || $nota->source_url || $nota->full_text)
+                                @if ($document->pdf_url || $document->source_url || $document->full_text)
                                     <div class="btn-group" role="group">
                                         <!-- View Details Button -->
-                                        <a href="{{ route('documents.show', $nota) }}" class="btn btn-sm btn-outline-secondary" title="Lihat Detail">
+                                        <a href="{{ route('documents.show', $document) }}" class="btn btn-sm btn-outline-secondary" title="Lihat Detail">
                                             <i class="fas fa-info-circle"></i>
                                         </a>
 
@@ -181,23 +180,23 @@
                                         <button 
                                             type="button" 
                                             class="btn btn-sm btn-outline-primary btn-quick-view"
-                                            data-document-id="{{ $nota->id }}"
+                                            data-document-id="{{ $document->id }}"
                                             title="Pratinjau Cepat">
                                             <i class="fas fa-eye"></i>
                                         </button>
 
                                         <!-- Download Button -->
                                         <a 
-                                            href="{{ route('documents.download', $nota) }}" 
+                                            href="{{ route('documents.download', $document) }}" 
                                             class="btn btn-sm btn-outline-success"
-                                            title="Download {{ $nota->pdf_url ? 'PDF' : 'Dokumen' }}">
+                                            title="Download {{ $document->pdf_url ? 'PDF' : 'Dokumen' }}">
                                             <i class="fas fa-download"></i>
                                         </a>
 
                                         <!-- Direct PDF View Button (only if PDF exists) -->
-                                        @if($nota->pdf_url)
+                                        @if($document->pdf_url)
                                             <a 
-                                                href="{{ route('documents.pdf-proxy', $nota) }}" 
+                                                href="{{ route('documents.pdf-proxy', $document) }}" 
                                                 class="btn btn-sm btn-outline-info" 
                                                 target="_blank"
                                                 title="Buka PDF di tab baru">
@@ -221,7 +220,7 @@
 
         <!-- Pagination -->
         <div class="mt-4">
-            {{ $notaKesepahaman->links('pagination.bootstrap') }}
+            {{ $documents->links('pagination.bootstrap') }}
         </div>
     </div>
 </x-layout>

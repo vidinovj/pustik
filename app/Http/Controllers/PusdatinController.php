@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\LegalDocument;
 use Illuminate\Http\Request;
 
-class FilterMOUMenluController extends Controller
+class PusdatinController extends Controller
 {
     public function index(Request $request)
     {
-        $query = LegalDocument::whereIn('document_type', ['Nota Kesepahaman - MOU', 'Nota Kesepahaman - PKS']);
+        $query = LegalDocument::whereIn('document_type', ['Nota Kesepahaman - MOU', 'Nota Kesepahaman - PKS', 'Dokumen Lainnya']);
 
         // Filter berdasarkan jenis dokumen
         if ($request->filled('jenis_dokumen')) {
@@ -69,11 +69,11 @@ class FilterMOUMenluController extends Controller
         }
 
         // Pagination
-        $notaKesepahaman = $query->paginate(10);
+        $documents = $query->paginate(10);
 
-        return view('nkmdp', [
-            'title' => 'Nota Kesepahaman dan PKS',
-            'notaKesepahaman' => $notaKesepahaman,
+        return view('pusdatin', [
+            'title' => 'Dokumen Internal Pusdatin',
+            'documents' => $documents,
         ]);
     }
 }

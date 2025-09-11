@@ -7,7 +7,7 @@ use App\Models\LegalDocument;
 
 use Illuminate\Support\Facades\Log;
 
-class FilterKebijakanMenluController extends Controller
+class FilterKebijakanInternalController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -78,7 +78,7 @@ class FilterKebijakanMenluController extends Controller
         $kebijakan = $query->paginate(10);
 
         // Pass filters back to the view for better UX
-        return view('ktbk', [
+        return view('kebijakan_internal', [
             'kebijakan' => $kebijakan,
             'filters' => $filters,
         ]);

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\LegalDocument;
 use Illuminate\Http\Request;
 
-class FilterKebijakanBukanMenluController extends Controller
+class FilterKebijakanEksternalController extends Controller
 {
     /**
      * Display a listing of filtered and sorted data.
@@ -68,7 +68,7 @@ class FilterKebijakanBukanMenluController extends Controller
         $kebijakan = $query->paginate(10);
 
         // Return view with filtered and sorted data
-        return view('ktbnk', [
+        return view('kebijakan_eksternal', [
             'title' => 'Kebijakan TIK Eksternal',
             'kebijakan' => $kebijakan
         ]);

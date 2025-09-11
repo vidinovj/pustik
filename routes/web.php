@@ -5,9 +5,9 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LegalDocumentController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\FilterKebijakanMenluController;
-use App\Http\Controllers\FilterKebijakanBukanMenluController;
-use App\Http\Controllers\FilterMOUMenluController;
+use App\Http\Controllers\FilterKebijakanInternalController;
+use App\Http\Controllers\FilterKebijakanEksternalController;
+use App\Http\Controllers\PusdatinController;
 use App\Http\Controllers\HomeControllerAwal;
 
 
@@ -15,13 +15,13 @@ use App\Http\Controllers\HomeControllerAwal;
 Route::get('/', [HomeControllerAwal::class, 'index'])->name('home');
 
 // Halaman Nota Kesepahaman (MoU) dan PKS
-Route::get('/nkmdp', [FilterMOUMenluController::class, 'index'])->name('nkmdp');
+Route::get('/pusdatin', [PusdatinController::class, 'index'])->name('pusdatin');
 
-// Halaman Kebijakan TIK by Non Kemlu
-Route::get('/ktbnk', [FilterKebijakanBukanMenluController::class, 'index'])->name('ktbnk');
+// Halaman Kebijakan TIK Eksternal
+Route::get('/kebijakan-eksternal', [FilterKebijakanEksternalController::class, 'index'])->name('kebijakan-eksternal');
 
-// Halaman Kebijakan TIK by Kemlu
-Route::get('/ktbk', [FilterKebijakanMenluController::class, 'index'])->name('ktbk');
+// Halaman Kebijakan TIK Internal
+Route::get('/kebijakan-internal', [FilterKebijakanInternalController::class, 'index'])->name('kebijakan-internal');
 
 
 Route::prefix('documents')->name('documents.')->group(function () {

@@ -21,17 +21,17 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->is('ktbk*') ? 'active' : '' }}" href="/ktbk">
+                    <a class="nav-link {{ request()->is('kebijakan-internal*') ? 'active' : '' }}" href="/kebijakan-internal">
                         Kebijakan Internal
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->is('ktbnk*') ? 'active' : '' }}" href="/ktbnk">
+                    <a class="nav-link {{ request()->is('kebijakan-eksternal*') ? 'active' : '' }}" href="/kebijakan-eksternal">
                         Kebijakan Eksternal
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {{ request()->is('nkmdp*') ? 'active' : '' }}" href="/nkmdp">
+                    <a class="nav-link {{ request()->is('pusdatin*') ? 'active' : '' }}" href="/pusdatin">
                         Pusdatin
                     </a>
                 </li>

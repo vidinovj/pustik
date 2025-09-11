@@ -1,10 +1,9 @@
-{{-- resources/views/ktbnk.blade.php --}}
 <x-layout>
     <x-slot:title>{{ $title }}</x-slot:title>
 
     <div class="container-fluid px-4 py-3">
         <!-- Filter Form -->
-        <form method="GET" action="{{ url('ktbnk') }}" class="form-container p-4 mb-4">
+        <form method="GET" action="{{ url('kebijakan-eksternal') }}" class="form-container p-4 mb-4">
             <!-- First Row - Main Filters -->
             <div class="row g-3 mb-3">
                 <div class="col-md-3">
