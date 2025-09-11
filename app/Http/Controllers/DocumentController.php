@@ -7,6 +7,7 @@ use App\Models\LegalDocument;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
@@ -47,7 +48,14 @@ class DocumentController extends Controller
             abort(404, 'Document not found or not available.');
         }
 
-        // Priority: PDF URL > Source URL > Full Text
+        // Priority: Local file > PDF URL > Source URL > Full Text
+        if ($document->file_path && Storage::disk('local')->exists($document->file_path)) {
+            return response()->download(
+                Storage::disk('local')->path($document->file_path), 
+                $document->file_name
+            );
+        }
+
         if ($document->pdf_url) {
             return redirect($document->pdf_url);
         }
@@ -77,7 +85,7 @@ class DocumentController extends Controller
             return response()->json(['error' => 'Document not available'], 404);
         }
 
-        // Process metadata to handle arrays
+        // Process metadata
         $processedMetadata = [];
         if ($document->metadata) {
             foreach ($document->metadata as $key => $value) {
@@ -89,10 +97,18 @@ class DocumentController extends Controller
             }
         }
 
-        // Process full_text to handle arrays
+        // Process full_text
         $fullText = $document->full_text;
         if (is_array($fullText)) {
             $fullText = implode("\n", $fullText);
+        }
+
+        // Determine the best URL for PDF viewing
+        $pdfUrl = null;
+        if ($document->file_path && $document->file_type === 'pdf') {
+            $pdfUrl = route('documents.serve-file', $document->id);
+        } elseif ($document->pdf_url) {
+            $pdfUrl = $document->pdf_url;
         }
 
         return response()->json([
@@ -102,8 +118,15 @@ class DocumentController extends Controller
             'issue_year' => $document->issue_year,
             'full_text' => $fullText,
             'source_url' => $document->source_url,
-            'pdf_url' => $document->pdf_url, // Added PDF URL support
+            'pdf_url' => $pdfUrl,
             'metadata' => $processedMetadata,
+            
+            // File information
+            'has_file' => !empty($document->file_path),
+            'file_name' => $document->file_name,
+            'file_type' => $document->file_type,
+            'file_size' => $document->file_size,
+            'uploaded_at' => $document->uploaded_at,
         ]);
     }
 
@@ -252,6 +275,53 @@ class DocumentController extends Controller
                 'pdf_url' => $document->pdf_url
             ]);
             abort(500, 'Error retrieving PDF.');
+        }
+    }
+
+    /**
+     * Serve uploaded files (for internal documents)
+     */
+    public function serveFile(LegalDocument $document)
+    {
+        if ($document->status !== 'active') {
+            abort(404, 'Document not available.');
+        }
+
+        if (!$document->file_path || !Storage::disk('local')->exists($document->file_path)) {
+            abort(404, 'File not found.');
+        }
+
+        try {
+            $filePath = Storage::disk('local')->path($document->file_path);
+            $mimeType = Storage::disk('local')->mimeType($document->file_path);
+            
+            // Log file access
+            Log::info('File served', [
+                'document_id' => $document->id,
+                'file_name' => $document->file_name,
+                'user_ip' => request()->ip()
+            ]);
+
+            // For PDF files, serve inline for preview
+            if ($document->file_type === 'pdf') {
+                return response()->file($filePath, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="' . $document->file_name . '"',
+                    'Cache-Control' => 'public, max-age=3600',
+                ]);
+            }
+
+            // For other files, force download
+            return response()->download($filePath, $document->file_name, [
+                'Content-Type' => $mimeType,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('File serving error: ' . $e->getMessage(), [
+                'document_id' => $document->id,
+                'file_path' => $document->file_path
+            ]);
+            abort(500, 'Error serving file.');
         }
     }
 }

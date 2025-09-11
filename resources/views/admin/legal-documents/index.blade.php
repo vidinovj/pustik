@@ -27,7 +27,7 @@
                         Type
                     </th>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Number
+                        File Info
                     </th>
                     <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                         Issue Year
@@ -56,7 +56,12 @@
                         <p class="text-gray-900 whitespace-no-wrap">{{ $legal_document->document_type }}</p>
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                        <p class="text-gray-900 whitespace-no-wrap">{{ $legal_document->document_number ?? 'N/A' }}</p>
+                        @if($legal_document->file_path)
+                            <p class="text-gray-900 whitespace-no-wrap">{{ $legal_document->file_name }}</p>
+                            <p class="text-gray-600 whitespace-no-wrap">{{ format_bytes($legal_document->file_size) }}</p>
+                        @else
+                            <p class="text-gray-600 whitespace-no-wrap">N/A</p>
+                        @endif
                     </td>
                     <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                         <p class="text-gray-900 whitespace-no-wrap">{{ $legal_document->issue_year ?? 'N/A' }}</p>

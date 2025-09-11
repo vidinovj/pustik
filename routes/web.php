@@ -63,6 +63,10 @@ Route::prefix('documents')->name('documents.')->group(function () {
     
     // Debug route (remove in production)
     Route::get('/{document}/debug', [DocumentController::class, 'debug'])->name('debug');
+    
+    // File serving route for uploaded documents
+    Route::get('/{document}/file', [DocumentController::class, 'serveFile'])->name('serve-file');
+
 });
 
 // Rute autentikasi
