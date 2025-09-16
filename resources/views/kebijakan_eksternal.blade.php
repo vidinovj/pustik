@@ -6,11 +6,11 @@
         $filters = [
             ['name' => 'jenis_kebijakan', 'label' => 'Jenis Kebijakan', 'type' => 'text', 'placeholder' => 'Jenis Kebijakan', 'width' => 3],
             ['name' => 'nomor_kebijakan', 'label' => 'Nomor Kebijakan', 'type' => 'text', 'placeholder' => 'Nomor Kebijakan', 'width' => 3],
-            ['name' => 'tahun_penerbitan_min', 'label' => 'Tahun Penerbitan (awal)', 'type' => 'number', 'placeholder' => 'Min Tahun', 'width' => 3],
-            ['name' => 'tahun_penerbitan_max', 'label' => 'Tahun Penerbitan (akhir)', 'type' => 'number', 'placeholder' => 'Max Tahun', 'width' => 3],
-            ['name' => 'perihal_kebijakan', 'label' => 'Perihal', 'type' => 'text', 'placeholder' => 'Perihal', 'width' => 4],
-            ['name' => 'instansi', 'label' => 'Instansi', 'type' => 'text', 'placeholder' => 'Instansi', 'width' => 4],
-            ['name' => 'sort_by', 'label' => 'Urutkan Berdasarkan', 'type' => 'select', 'placeholder' => 'Pilih...', 'options' => ['nomor_kebijakan' => 'Nomor Kebijakan', 'tahun_penerbitan' => 'Tahun Penerbitan'], 'width' => 4],
+            ['name' => 'tahun_penerbitan_min', 'label' => 'Tahun (Dari)', 'type' => 'number', 'placeholder' => 'Dari Tahun', 'width' => 3],
+            ['name' => 'tahun_penerbitan_max', 'label' => 'Tahun (Sampai)', 'type' => 'number', 'placeholder' => 'Sampai Tahun', 'width' => 3],
+            ['name' => 'perihal_kebijakan', 'label' => 'Perihal Kebijakan', 'type' => 'text', 'placeholder' => 'Perihal Kebijakan', 'width' => 3],
+            ['name' => 'instansi', 'label' => 'Instansi', 'type' => 'text', 'placeholder' => 'Instansi', 'width' => 3],
+            ['name' => 'sort_by', 'label' => 'Urutkan Berdasarkan', 'type' => 'select', 'placeholder' => '-- Pilih --', 'options' => ['nomor_kebijakan' => 'Nomor Kebijakan', 'tahun_penerbitan' => 'Tahun Penerbitan'], 'width' => 3],
             ['name' => 'sort_order', 'label' => 'Urutan', 'type' => 'select', 'placeholder' => '', 'options' => ['asc' => 'Dari bawah ke atas (NAIK)', 'desc' => 'Dari atas ke bawah (TURUN)'], 'width' => 3],
         ];
         @endphp

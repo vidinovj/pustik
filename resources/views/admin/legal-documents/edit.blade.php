@@ -108,6 +108,16 @@
                     <input type="date" name="metadata[tanggal_berakhir]" id="tanggal_berakhir" value="{{ old('metadata.tanggal_berakhir', $document->metadata['tanggal_berakhir'] ?? '') }}" class="form-control">
                 </div>
 
+                <div class="col-md-6">
+                    <label for="satker_kemlu_terkait" class="form-label fw-medium text-secondary">Satker Kemlu Terkait (Opsional):</label>
+                    <input type="text" name="metadata[satker_kemlu_terkait]" id="satker_kemlu_terkait" value="{{ old('metadata.satker_kemlu_terkait', $document->metadata['satker_kemlu_terkait'] ?? '') }}" class="form-control">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="kl_external_terkait" class="form-label fw-medium text-secondary">K/L/I External Terkait (Opsional):</label>
+                    <input type="text" name="metadata[kl_external_terkait]" id="kl_external_terkait" value="{{ old('metadata.kl_external_terkait', $document->metadata['kl_external_terkait'] ?? '') }}" class="form-control">
+                </div>
+
                 <div class="col-md-12">
                     <label for="full_text" class="form-label fw-medium text-secondary">Ringkasan/Catatan Dokumen (Opsional):</label>
                     <textarea name="full_text" id="full_text" rows="4" class="form-control" placeholder="Masukkan ringkasan, poin-poin penting, atau catatan...">{{ old('full_text', $document->full_text) }}</textarea>

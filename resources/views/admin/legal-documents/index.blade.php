@@ -13,8 +13,8 @@
     $filters = [
         ['name' => 'title', 'label' => 'Perihal', 'type' => 'text', 'placeholder' => 'Saring berdasarkan perihal', 'width' => 3],
         ['name' => 'document_type', 'label' => 'Jenis Dokumen', 'type' => 'text', 'placeholder' => 'Saring berdasarkan jenis', 'width' => 3],
-        ['name' => 'document_number', 'label' => 'Nomor Dokumen', 'type' => 'text', 'placeholder' => 'Saring berdasarkan nomor', 'width' => 2],
-        ['name' => 'issue_year', 'label' => 'Tahun Terbit', 'type' => 'number', 'placeholder' => 'Saring berdasarkan tahun', 'width' => 2],
+        ['name' => 'document_number', 'label' => 'Nomor Dokumen', 'type' => 'text', 'placeholder' => 'Saring berdasarkan nomor', 'width' => 3],
+        ['name' => 'issue_year', 'label' => 'Tahun Terbit', 'type' => 'number', 'placeholder' => 'Saring berdasarkan tahun', 'width' => 3],
     ];
     @endphp
 

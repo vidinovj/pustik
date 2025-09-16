@@ -22,8 +22,8 @@
                 @endif
             </div>
         @endforeach
-        <div class="col-md-2 d-flex align-items-end">
-            <button type="submit" class="btn btn-filter px-4 w-100">Filter</button>
+        <div class="col-md-12 d-flex justify-content-end">
+            <button type="submit" class="btn btn-filter px-4">Filter</button>
         </div>
     </div>
 </form>

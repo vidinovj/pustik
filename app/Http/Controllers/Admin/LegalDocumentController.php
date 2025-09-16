@@ -54,6 +54,8 @@ class LegalDocumentController extends Controller
             'status' => 'required|string|in:active,inactive,pending,draft',
             'document_type_code' => 'nullable|string|max:255',
             'metadata.tanggal_berakhir' => 'nullable|date',
+            'metadata.satker_kemlu_terkait' => 'nullable|string|max:255',
+            'metadata.kl_external_terkait' => 'nullable|string|max:255',
 
             // File upload validation
             'document_file' => 'nullable|file|mimes:pdf,doc,docx|max:10240', // 10MB max
@@ -151,6 +153,8 @@ class LegalDocumentController extends Controller
             'status' => 'required|string|in:active,inactive,pending,draft',
             'document_type_code' => 'nullable|string|max:255',
             'metadata.tanggal_berakhir' => 'nullable|date',
+            'metadata.satker_kemlu_terkait' => 'nullable|string|max:255',
+            'metadata.kl_external_terkait' => 'nullable|string|max:255',
 
             // File upload validation for updates
             'document_file' => 'nullable|file|mimes:pdf,doc,docx|max:10240',

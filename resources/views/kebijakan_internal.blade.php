@@ -4,11 +4,11 @@
     <div class="container-fluid px-4 py-3">
         @php
         $filters = [
-            ['name' => 'jenis_kebijakan', 'label' => 'Jenis Kebijakan', 'type' => 'text', 'placeholder' => 'Jenis Kebijakan', 'width' => 2],
-            ['name' => 'nomor_kebijakan', 'label' => 'Nomor Kebijakan', 'type' => 'text', 'placeholder' => 'Nomor Kebijakan', 'width' => 2],
-            ['name' => 'tahun_penerbitan_from', 'label' => 'Tahun (Dari)', 'type' => 'number', 'placeholder' => 'Dari Tahun', 'width' => 2],
-            ['name' => 'tahun_penerbitan_to', 'label' => 'Tahun (Sampai)', 'type' => 'number', 'placeholder' => 'Sampai Tahun', 'width' => 2],
-            ['name' => 'perihal_kebijakan', 'label' => 'Perihal Kebijakan', 'type' => 'text', 'placeholder' => 'Perihal Kebijakan', 'width' => 4],
+            ['name' => 'jenis_kebijakan', 'label' => 'Jenis Kebijakan', 'type' => 'text', 'placeholder' => 'Jenis Kebijakan', 'width' => 3],
+            ['name' => 'nomor_kebijakan', 'label' => 'Nomor Kebijakan', 'type' => 'text', 'placeholder' => 'Nomor Kebijakan', 'width' => 3],
+            ['name' => 'tahun_penerbitan_from', 'label' => 'Tahun (Dari)', 'type' => 'number', 'placeholder' => 'Dari Tahun', 'width' => 3],
+            ['name' => 'tahun_penerbitan_to', 'label' => 'Tahun (Sampai)', 'type' => 'number', 'placeholder' => 'Sampai Tahun', 'width' => 3],
+            ['name' => 'perihal_kebijakan', 'label' => 'Perihal Kebijakan', 'type' => 'text', 'placeholder' => 'Perihal Kebijakan', 'width' => 6],
             ['name' => 'sort_by', 'label' => 'Urutkan Berdasarkan', 'type' => 'select', 'placeholder' => '-- Pilih --', 'options' => ['tahun_penerbitan' => 'Tahun Penerbitan', 'nomor_kebijakan' => 'Nomor Kebijakan'], 'width' => 3],
             ['name' => 'sort_order', 'label' => 'Urutan', 'type' => 'select', 'placeholder' => '', 'options' => ['asc' => 'Dari bawah ke atas (NAIK)', 'desc' => 'Dari atas ke bawah (TURUN)'], 'width' => 3],
         ];

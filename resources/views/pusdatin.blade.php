@@ -17,7 +17,7 @@
                 'tanggal_disahkan_desc' => 'Tahun Disahkan (Terlama)',
                 'tanggal_berakhir_asc' => 'Tanggal Berakhir (Terbaru)',
                 'tanggal_berakhir_desc' => 'Tanggal Berakhir (Terlama)',
-            ], 'width' => 4],
+            ], 'width' => 3],
         ];
         @endphp
 
