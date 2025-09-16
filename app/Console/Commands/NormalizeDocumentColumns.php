@@ -1,4 +1,5 @@
 <?php
+
 // app/Console/Commands/NormalizeDocumentColumns.php
 
 namespace App\Console\Commands;
@@ -10,6 +11,7 @@ use Illuminate\Support\Str;
 class NormalizeDocumentColumns extends Command
 {
     protected $signature = 'documents:normalize-columns {--dry-run : Show what would be changed without saving} {--force : Force normalization on all documents}';
+
     protected $description = 'Normalize legal document column data and populate missing fields';
 
     public function handle()
@@ -26,7 +28,7 @@ class NormalizeDocumentColumns extends Command
 
         $documents = LegalDocument::all();
         $this->info("📋 Processing {$documents->count()} documents for column normalization...");
-        
+
         $stats = [
             'document_type_fixed' => 0,
             'document_type_processed' => 0,
@@ -34,7 +36,7 @@ class NormalizeDocumentColumns extends Command
             'checksum_generated' => 0,
             'source_id_generated' => 0,
             'full_text_attempted' => 0,
-            'total_updated' => 0
+            'total_updated' => 0,
         ];
 
         foreach ($documents as $document) {
@@ -51,12 +53,12 @@ class NormalizeDocumentColumns extends Command
                     $changes['document_type'] = ['from' => $oldType, 'to' => $newType];
                     $stats['document_type_processed']++;
                     $hasChanges = true;
-                    
+
                     if ($oldType !== $newType) {
                         $stats['document_type_fixed']++;
                     }
-                    
-                    if (!$isDryRun) {
+
+                    if (! $isDryRun) {
                         $document->document_type = $newType;
                     }
                 } elseif ($oldType !== $newType) {
@@ -65,8 +67,8 @@ class NormalizeDocumentColumns extends Command
                     $stats['document_type_fixed']++;
                     $stats['document_type_processed']++;
                     $hasChanges = true;
-                    
-                    if (!$isDryRun) {
+
+                    if (! $isDryRun) {
                         $document->document_type = $newType;
                     }
                 }
@@ -77,8 +79,8 @@ class NormalizeDocumentColumns extends Command
                 $changes['status'] = ['from' => null, 'to' => 'active'];
                 $stats['status_added']++;
                 $hasChanges = true;
-                
-                if (!$isDryRun) {
+
+                if (! $isDryRun) {
                     $document->status = 'active';
                 }
             }
@@ -86,11 +88,11 @@ class NormalizeDocumentColumns extends Command
             // 3. Generate missing checksum
             if (empty($document->checksum)) {
                 $checksum = $this->generateChecksum($document);
-                $changes['checksum'] = ['from' => null, 'to' => substr($checksum, 0, 8) . '...'];
+                $changes['checksum'] = ['from' => null, 'to' => substr($checksum, 0, 8).'...'];
                 $stats['checksum_generated']++;
                 $hasChanges = true;
-                
-                if (!$isDryRun) {
+
+                if (! $isDryRun) {
                     $document->checksum = $checksum;
                 }
             }
@@ -101,19 +103,19 @@ class NormalizeDocumentColumns extends Command
                 $changes['document_source_id'] = ['from' => null, 'to' => $sourceId];
                 $stats['source_id_generated']++;
                 $hasChanges = true;
-                
-                if (!$isDryRun) {
+
+                if (! $isDryRun) {
                     $document->document_source_id = $sourceId;
                 }
             }
 
             // 5. Attempt to populate full_text
-            if (empty($document->full_text) && !empty($document->source_url)) {
+            if (empty($document->full_text) && ! empty($document->source_url)) {
                 $changes['full_text'] = ['from' => null, 'to' => 'extraction_attempted'];
                 $stats['full_text_attempted']++;
                 $hasChanges = true;
-                
-                if (!$isDryRun) {
+
+                if (! $isDryRun) {
                     $document->full_text = $this->extractFullText($document);
                 }
             }
@@ -121,8 +123,8 @@ class NormalizeDocumentColumns extends Command
             // Display and save changes
             if ($hasChanges) {
                 $this->displayDocumentChanges($document, $changes, $isDryRun, $isForce);
-                
-                if (!$isDryRun) {
+
+                if (! $isDryRun) {
                     $document->save();
                     $stats['total_updated']++;
                 }
@@ -135,7 +137,7 @@ class NormalizeDocumentColumns extends Command
     private function needsDocumentTypeNormalization(LegalDocument $document): bool
     {
         $type = $document->document_type;
-        
+
         // Check for abbreviations that need expansion, incorrect casing, or unknown types
         return in_array($type, ['UU', 'PP', 'Perpres', 'Permen', 'Undang-Undang', 'uu', 'Unknown Document Type', 'Unknown']) ||
                (empty($type) && $this->canInferDocumentType($document));
@@ -144,15 +146,15 @@ class NormalizeDocumentColumns extends Command
     private function normalizeDocumentType(LegalDocument $document): string
     {
         $currentType = $document->document_type;
-        
+
         // Standardize abbreviations
         $typeMapping = [
             'UU' => 'Undang-undang',
-            'PP' => 'Peraturan Pemerintah', 
+            'PP' => 'Peraturan Pemerintah',
             'Perpres' => 'Peraturan Presiden',
             'Permen' => 'Peraturan Menteri',
             'uu' => 'Undang-undang',
-            'Undang-Undang' => 'Undang-undang'
+            'Undang-Undang' => 'Undang-undang',
         ];
 
         if (isset($typeMapping[$currentType])) {
@@ -170,32 +172,32 @@ class NormalizeDocumentColumns extends Command
     private function canInferDocumentType(LegalDocument $document): bool
     {
         // Check URL patterns first
-        if (!empty($document->source_url)) {
+        if (! empty($document->source_url)) {
             $urlString = strtolower($document->source_url);
-            
+
             // URL contains clear document type indicators
             if (preg_match('/\/(uu|pp|perpres|permen|permendagri|permenkumham|permendikbud|permendikbudriset|permenkes|permenkeu|permentan|permenhub|permenpan|permenlu|permendesa|permenpera|permensos|permenlhk|permenristekdikti|permenedag|permenperin|permenkominfo|permenkopukm|permenpopar|permenjamsos|permenaker|permentrans)/i', $urlString)) {
                 return true;
             }
         }
-        
+
         // Check title and document_number
-        $text = strtolower($document->title . ' ' . $document->document_number);
+        $text = strtolower($document->title.' '.$document->document_number);
         $indicators = ['undang-undang', 'peraturan pemerintah', 'peraturan presiden', 'peraturan menteri'];
-        
+
         foreach ($indicators as $indicator) {
             if (strpos($text, $indicator) !== false) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
     private function inferDocumentType(LegalDocument $document): string
     {
         // New logic: try to infer from URL first
-        if (!empty($document->source_url)) {
+        if (! empty($document->source_url)) {
             $urlString = strtolower($document->source_url);
 
             // Check for specific document types in URL
@@ -208,7 +210,7 @@ class NormalizeDocumentColumns extends Command
             if (strpos($urlString, '/pp') !== false) {
                 return 'Peraturan Pemerintah';
             }
-            
+
             // Check for various ministry-specific permen patterns
             if (preg_match('/\/(permen|permendagri|permenkumham|permendikbud|permendikbudriset|permenkes|permenkeu|permentan|permenhub|permenpan|permenlu|permendesa|permenpera|permensos|permenlhk|permenristekdikti|permenedag|permenperin|permenkominfo|permenkopukm|permenpopar|permenjamsos|permenaker|permentrans)/i', $urlString)) {
                 return 'Peraturan Menteri';
@@ -216,7 +218,7 @@ class NormalizeDocumentColumns extends Command
         }
 
         // Fallback to old logic using title and document_number
-        $text = strtolower($document->title . ' ' . $document->document_number);
+        $text = strtolower($document->title.' '.$document->document_number);
 
         if (strpos($text, 'undang-undang') !== false || strpos($text, 'uu no') !== false) {
             return 'Undang-undang';
@@ -250,9 +252,9 @@ class NormalizeDocumentColumns extends Command
             $document->title,
             $document->document_number,
             $document->source_url,
-            json_encode($document->metadata)
+            json_encode($document->metadata),
         ]);
-        
+
         return hash('sha256', $content);
     }
 
@@ -296,22 +298,22 @@ class NormalizeDocumentColumns extends Command
     {
         // Attempt basic full text extraction
         $fullText = '';
-        
+
         // Combine available text sources
         $sources = [
             $document->title,
             $document->document_number,
             $document->metadata['summary'] ?? '',
-            implode(' ', $document->metadata['keywords'] ?? [])
+            implode(' ', $document->metadata['keywords'] ?? []),
         ];
-        
+
         $fullText = implode(' | ', array_filter($sources));
-        
+
         // If we have a source URL, indicate extraction is needed
-        if (!empty($document->source_url) && empty($fullText)) {
-            $fullText = '[Full text extraction needed from: ' . $document->source_url . ']';
+        if (! empty($document->source_url) && empty($fullText)) {
+            $fullText = '[Full text extraction needed from: '.$document->source_url.']';
         }
-        
+
         return $fullText ?: '[No extractable text available]';
     }
 
@@ -322,21 +324,21 @@ class NormalizeDocumentColumns extends Command
             $from = $changes['document_type']['from'];
             $to = $changes['document_type']['to'];
             // Don't show "already correct" for Unknown types
-            if ($from === $to && !in_array($from, ['Unknown Document Type', 'Unknown'])) {
+            if ($from === $to && ! in_array($from, ['Unknown Document Type', 'Unknown'])) {
                 $prefix .= '✓ '; // Indicate already correct in force mode
             }
         }
-        
+
         $this->info("{$prefix}Document: {$document->title}");
-        
+
         foreach ($changes as $field => $change) {
             $from = $change['from'] ?? 'NULL';
             $to = $change['to'];
             // Don't show "already correct" for Unknown types
-            $indicator = ($isForce && $from === $to && !in_array($from, ['Unknown Document Type', 'Unknown'])) ? ' (already correct)' : '';
+            $indicator = ($isForce && $from === $to && ! in_array($from, ['Unknown Document Type', 'Unknown'])) ? ' (already correct)' : '';
             $this->line("   {$field}: {$from} → {$to}{$indicator}");
         }
-        
+
         $this->newLine();
     }
 
@@ -344,20 +346,20 @@ class NormalizeDocumentColumns extends Command
     {
         $this->newLine();
         $this->info('📊 COLUMN NORMALIZATION SUMMARY:');
-        
+
         $tableData = [
             ['Document Type Fixed', $stats['document_type_fixed']],
             ['Status Added', $stats['status_added']],
             ['Checksums Generated', $stats['checksum_generated']],
             ['Source IDs Generated', $stats['source_id_generated']],
             ['Full Text Attempted', $stats['full_text_attempted']],
-            ['📝 Total Documents Updated', $isDryRun ? 'DRY RUN' : $stats['total_updated']]
+            ['📝 Total Documents Updated', $isDryRun ? 'DRY RUN' : $stats['total_updated']],
         ];
-        
+
         if ($isForce) {
             array_splice($tableData, 1, 0, [['Document Type Processed (Force)', $stats['document_type_processed']]]);
         }
-        
+
         $this->table(['Change Type', 'Count'], $tableData);
 
         if ($isDryRun) {

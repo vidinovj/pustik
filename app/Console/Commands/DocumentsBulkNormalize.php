@@ -1,4 +1,5 @@
 <?php
+
 // app/Console/Commands/DocumentsBulkNormalize.php
 
 namespace App\Console\Commands;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\Artisan;
 class DocumentsBulkNormalize extends Command
 {
     protected $signature = 'documents:bulk-normalize {--dry-run : Show what would be changed without saving} {--force : Force update for TIK scores}';
+
     protected $description = 'Run all document normalization commands in sequence.';
 
     public function handle()

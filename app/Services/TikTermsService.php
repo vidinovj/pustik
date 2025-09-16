@@ -1,4 +1,5 @@
 <?php
+
 // app/Services/TikTermsService.php
 
 namespace App\Services;
@@ -19,7 +20,7 @@ class TikTermsService
         'keamanan siber' => 10,
         'cyber security' => 10,
         'cybersecurity' => 10,
-        
+
         // Digital Government & SPBE (Very High Priority)
         'spbe' => 10,
         'sistem pemerintahan berbasis elektronik' => 10,
@@ -31,7 +32,7 @@ class TikTermsService
         'pemerintahan digital' => 9,
         'layanan digital' => 8,
         'administrasi digital' => 8,
-        
+
         // Data & Privacy
         'data pribadi' => 8,
         'perlindungan data' => 8,
@@ -42,7 +43,7 @@ class TikTermsService
         'data mining' => 6,
         'basis data' => 6,
         'database' => 6,
-        
+
         // Internet & Communications
         'telekomunikasi' => 8,
         'internet' => 6,
@@ -52,7 +53,7 @@ class TikTermsService
         'broadband' => 6,
         'fiber optik' => 6,
         'satelit komunikasi' => 6,
-        
+
         // E-Commerce & Digital Economy
         'e-commerce' => 7,
         'e-business' => 7,
@@ -64,7 +65,7 @@ class TikTermsService
         'cryptocurrency' => 6,
         'digital payment' => 7,
         'pembayaran digital' => 7,
-        
+
         // Artificial Intelligence & Modern Tech
         'artificial intelligence' => 8,
         'machine learning' => 7,
@@ -72,7 +73,7 @@ class TikTermsService
         'robot' => 6,
         'otomasi' => 6,
         'automation' => 6,
-        
+
         // Cloud & Infrastructure
         'cloud computing' => 7,
         'komputasi awan' => 7,
@@ -82,7 +83,7 @@ class TikTermsService
         'pusat data' => 6,
         'infrastruktur digital' => 8,
         'infrastruktur teknologi' => 8,
-        
+
         // Digital Services & Applications
         'aplikasi' => 5,
         'software' => 5,
@@ -93,7 +94,7 @@ class TikTermsService
         'aplikasi mobile' => 6,
         'web application' => 6,
         'aplikasi web' => 6,
-        
+
         // Security & Compliance
         'keamanan informasi' => 9,
         'information security' => 9,
@@ -104,7 +105,7 @@ class TikTermsService
         'digital certificate' => 7,
         'tanda tangan digital' => 8,
         'digital signature' => 8,
-        
+
         // Standards & Interoperability
         'interoperabilitas' => 7,
         'interoperability' => 7,
@@ -113,7 +114,7 @@ class TikTermsService
         'protokol' => 5,
         'integration' => 6,
         'integrasi sistem' => 6,
-        
+
         // Digital Identity & Authentication
         'identitas digital' => 8,
         'digital identity' => 8,
@@ -122,14 +123,14 @@ class TikTermsService
         'nik elektronik' => 7,
         'ktp elektronik' => 7,
         'e-ktp' => 7,
-        
+
         // Digital Innovation & Startups
         'startup' => 6,
         'inovasi digital' => 7,
         'digital innovation' => 7,
         'inkubator teknologi' => 6,
         'tech incubator' => 6,
-        
+
         // General Technology Terms (Lower Priority)
         'informatika' => 7,
         'komputer' => 5,
@@ -225,10 +226,10 @@ class TikTermsService
      */
     public static function isDocumentTypeTikRelated(string $documentType, string $title = ''): bool
     {
-        $combinedText = strtolower($documentType . ' ' . $title);
+        $combinedText = strtolower($documentType.' '.$title);
 
         foreach (self::$tikDocumentPatterns as $pattern => $minScore) {
-            if (preg_match('/' . $pattern . '/i', $combinedText)) {
+            if (preg_match('/'.$pattern.'/i', $combinedText)) {
                 return true;
             }
         }
@@ -249,13 +250,13 @@ class TikTermsService
                 $foundKeywords[] = [
                     'term' => $term,
                     'score' => $score,
-                    'category' => self::categorizeTerm($term)
+                    'category' => self::categorizeTerm($term),
                 ];
             }
         }
 
         // Sort by score descending
-        usort($foundKeywords, function($a, $b) {
+        usort($foundKeywords, function ($a, $b) {
             return $b['score'] - $a['score'];
         });
 
@@ -306,21 +307,21 @@ class TikTermsService
      */
     public static function generateTikSummary(string $title, string $content = '', string $agency = ''): array
     {
-        $contentScore = self::calculateTikScore($title . ' ' . $content);
+        $contentScore = self::calculateTikScore($title.' '.$content);
         $agencyScore = self::calculateAgencyTikScore($agency);
         $totalScore = $contentScore + $agencyScore;
-        
-        $keywords = self::extractTikKeywords($title . ' ' . $content);
+
+        $keywords = self::extractTikKeywords($title.' '.$content);
         $isHighlyRelated = $totalScore >= 15;
-        
+
         return [
             'tik_score' => $totalScore,
             'content_score' => $contentScore,
             'agency_score' => $agencyScore,
             'is_highly_tik_related' => $isHighlyRelated,
             'found_keywords' => array_slice($keywords, 0, 10), // Top 10 keywords
-            'primary_category' => !empty($keywords) ? $keywords[0]['category'] : 'general_technology',
-            'relevance_level' => self::getRelevanceLevel($totalScore)
+            'primary_category' => ! empty($keywords) ? $keywords[0]['category'] : 'general_technology',
+            'relevance_level' => self::getRelevanceLevel($totalScore),
         ];
     }
 
@@ -329,10 +330,19 @@ class TikTermsService
      */
     private static function getRelevanceLevel(int $score): string
     {
-        if ($score >= 30) return 'very_high';
-        if ($score >= 20) return 'high';
-        if ($score >= 10) return 'medium';
-        if ($score >= 5) return 'low';
+        if ($score >= 30) {
+            return 'very_high';
+        }
+        if ($score >= 20) {
+            return 'high';
+        }
+        if ($score >= 10) {
+            return 'medium';
+        }
+        if ($score >= 5) {
+            return 'low';
+        }
+
         return 'minimal';
     }
 }

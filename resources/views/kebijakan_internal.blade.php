@@ -2,102 +2,19 @@
     <x-slot:title>Kebijakan TIK Internal</x-slot:title>
 
     <div class="container-fluid px-4 py-3">
-        <!-- Filter Form -->
-        <form method="GET" action="{{ url('kebijakan-internal') }}" class="form-container p-4 mb-4">
-            <!-- First Row - Main Filters -->
-            <div class="row g-3 mb-3">
-                <div class="col-md-2">
-                    <label for="jenis_kebijakan" class="form-label fw-medium text-secondary">Jenis Kebijakan:</label>
-                    <input 
-                        type="text" 
-                        name="jenis_kebijakan" 
-                        id="jenis_kebijakan" 
-                        value="{{ request('jenis_kebijakan') }}" 
-                        placeholder="Jenis Kebijakan" 
-                        class="form-control">
-                </div>
+        @php
+        $filters = [
+            ['name' => 'jenis_kebijakan', 'label' => 'Jenis Kebijakan', 'type' => 'text', 'placeholder' => 'Jenis Kebijakan', 'width' => 2],
+            ['name' => 'nomor_kebijakan', 'label' => 'Nomor Kebijakan', 'type' => 'text', 'placeholder' => 'Nomor Kebijakan', 'width' => 2],
+            ['name' => 'tahun_penerbitan_from', 'label' => 'Tahun (Dari)', 'type' => 'number', 'placeholder' => 'Dari Tahun', 'width' => 2],
+            ['name' => 'tahun_penerbitan_to', 'label' => 'Tahun (Sampai)', 'type' => 'number', 'placeholder' => 'Sampai Tahun', 'width' => 2],
+            ['name' => 'perihal_kebijakan', 'label' => 'Perihal Kebijakan', 'type' => 'text', 'placeholder' => 'Perihal Kebijakan', 'width' => 4],
+            ['name' => 'sort_by', 'label' => 'Urutkan Berdasarkan', 'type' => 'select', 'placeholder' => '-- Pilih --', 'options' => ['tahun_penerbitan' => 'Tahun Penerbitan', 'nomor_kebijakan' => 'Nomor Kebijakan'], 'width' => 3],
+            ['name' => 'sort_order', 'label' => 'Urutan', 'type' => 'select', 'placeholder' => '', 'options' => ['asc' => 'Dari bawah ke atas (NAIK)', 'desc' => 'Dari atas ke bawah (TURUN)'], 'width' => 3],
+        ];
+        @endphp
 
-                <div class="col-md-2">
-                    <label for="nomor_kebijakan" class="form-label fw-medium text-secondary">Nomor Kebijakan:</label>
-                    <input 
-                        type="text" 
-                        name="nomor_kebijakan" 
-                        id="nomor_kebijakan" 
-                        value="{{ request('nomor_kebijakan') }}" 
-                        placeholder="Nomor Kebijakan" 
-                        class="form-control">
-                </div>
-
-                <div class="col-md-2">
-                    <label for="tahun_penerbitan_from" class="form-label fw-medium text-secondary">Tahun (Dari):</label>
-                    <input 
-                        type="number" 
-                        name="tahun_penerbitan_from" 
-                        id="tahun_penerbitan_from" 
-                        value="{{ request('tahun_penerbitan_from') }}" 
-                        placeholder="Dari Tahun" 
-                        class="form-control">
-                </div>
-
-                <div class="col-md-2">
-                    <label for="tahun_penerbitan_to" class="form-label fw-medium text-secondary">Tahun (Sampai):</label>
-                    <input 
-                        type="number" 
-                        name="tahun_penerbitan_to" 
-                        id="tahun_penerbitan_to" 
-                        value="{{ request('tahun_penerbitan_to') }}" 
-                        placeholder="Sampai Tahun" 
-                        class="form-control">
-                </div>
-
-                <div class="col-md-4">
-                    <label for="perihal_kebijakan" class="form-label fw-medium text-secondary">Perihal Kebijakan:</label>
-                    <input 
-                        type="text" 
-                        name="perihal_kebijakan" 
-                        id="perihal_kebijakan" 
-                        value="{{ request('perihal_kebijakan') }}" 
-                        placeholder="Perihal Kebijakan" 
-                        class="form-control">
-                </div>
-            </div>
-
-            <!-- Second Row - Sort Options and Submit -->
-            <div class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label for="sort_by" class="form-label fw-medium text-secondary">Urutkan Berdasarkan:</label>
-                    <select 
-                        name="sort_by" 
-                        id="sort_by" 
-                        class="form-select"
-                        onchange="this.form.submit()">
-                        <option value="" {{ request('sort_by') == '' ? 'selected' : '' }}>-- Pilih --</option>
-                        <option value="tahun_penerbitan" {{ request('sort_by') == 'tahun_penerbitan' ? 'selected' : '' }}>Tahun Penerbitan</option>
-                        <option value="nomor_kebijakan" {{ request('sort_by') == 'nomor_kebijakan' ? 'selected' : '' }}>Nomor Kebijakan</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label for="sort_order" class="form-label fw-medium text-secondary">Urutan:</label>
-                    <select 
-                        name="sort_order" 
-                        id="sort_order" 
-                        class="form-select"
-                        onchange="this.form.submit()">
-                        <option value="asc" {{ request('sort_order') == 'asc' ? 'selected' : '' }}>Dari bawah ke atas (NAIK)</option>
-                        <option value="desc" {{ request('sort_order') == 'desc' ? 'selected' : '' }}>Dari atas ke bawah (TURUN)</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-                    <button 
-                        type="submit" 
-                        class="btn btn-filter px-4">
-                        Filter
-                    </button>
-                </div>
-            </div>
-        </form>
+        <x-dynamic-filter-form :action="url('kebijakan-internal')" :filters="$filters" />
 
         <!-- Results Table -->
         <div class="table-responsive">

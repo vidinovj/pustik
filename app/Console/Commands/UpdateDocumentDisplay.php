@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\File;
 class UpdateDocumentDisplay extends Command
 {
     protected $signature = 'update:document-display';
+
     protected $description = 'Update document display to use issue_year instead of issue_date';
 
     public function handle()
@@ -41,6 +42,7 @@ class UpdateDocumentDisplay extends Command
                     '$document->issue_year',
                     $content
                 );
+
                 return str_replace(
                     '$document->issue_date ? $document->issue_date->format(\'Y-m-d\') : \'no-date\'',
                     '$document->issue_year ?? \'no-year\'',
@@ -53,6 +55,7 @@ class UpdateDocumentDisplay extends Command
                     '@if($document->issue_year)',
                     $content
                 );
+
                 return str_replace(
                     '{{ $document->issue_date->format(\'d F Y\') }}',
                     '{{ $document->issue_year }}',
@@ -65,6 +68,7 @@ class UpdateDocumentDisplay extends Command
                     "('issue_year'] ?? '')",
                     $content
                 );
+
                 return str_replace(
                     '\'issue_date\' => $documentData[\'issue_date\'] ?? null,',
                     '',

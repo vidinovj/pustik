@@ -35,6 +35,11 @@
                         Pusdatin
                     </a>
                 </li>
+                @auth
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('admin.legal-documents.*') ? 'active' : '' }}" href="{{ route('admin.legal-documents.index') }}">Kelola Dokumen</a>
+                    </li>
+                @endauth
             </ul>
 
             <!-- Auth Section -->

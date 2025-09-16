@@ -1,4 +1,5 @@
 <?php
+
 // database/migrations/2025_08_26_cleanup_redundant_columns.php
 
 use Illuminate\Database\Migrations\Migration;
@@ -13,7 +14,7 @@ return new class extends Migration
             // Add new optimized columns
             $table->integer('issue_year')->nullable()->after('document_number');
             $table->string('document_type_code', 20)->nullable()->after('document_type');
-            
+
             // Add indexes for the new columns
             $table->index('issue_year');
             $table->index('document_type_code');

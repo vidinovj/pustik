@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\LegalDocument;
 use Illuminate\Console\Command;
-use Illuminate\Support\Str;
 
 class NormalizeFromUrl extends Command
 {
@@ -76,6 +75,7 @@ class NormalizeFromUrl extends Command
 
         if ($count === 0) {
             $this->info('No documents found with a BPK source URL.');
+
             return;
         }
 
@@ -100,9 +100,10 @@ class NormalizeFromUrl extends Command
                     $documentNumber = $matches['number'];
                     $issueYear = $matches['year'] ?? null;
 
-                    if (!$documentType) {
+                    if (! $documentType) {
                         $this->warn("\nSkipping document ID {$document->id}: Unknown type code '{$typeCode}'.");
                         $stats['skipped']++;
+
                         continue;
                     }
 
@@ -120,17 +121,17 @@ class NormalizeFromUrl extends Command
                         $changes['issue_year'] = ['from' => $document->issue_year, 'to' => $issueYear];
                     }
 
-                    if (!empty($changes)) {
+                    if (! empty($changes)) {
                         $stats['updated']++;
                         $this->line('\n');
                         $this->info("Updating Document ID: {$document->id} ({$document->title})");
                         foreach ($changes as $field => $change) {
                             $this->line("  - {$field}: '{$change['from']}' -> '{$change['to']}'");
-                            if (!$isDryRun) {
+                            if (! $isDryRun) {
                                 $document->{$field} = $change['to'];
                             }
                         }
-                        if (!$isDryRun) {
+                        if (! $isDryRun) {
                             $document->save();
                         }
                     }
@@ -149,7 +150,7 @@ class NormalizeFromUrl extends Command
             ['Metric', 'Value'],
             [
                 ['Documents Processed', $stats['processed']],
-                ['Documents Updated', $isDryRun ? $stats['updated'] . ' (Dry Run)' : $stats['updated']],
+                ['Documents Updated', $isDryRun ? $stats['updated'].' (Dry Run)' : $stats['updated']],
                 ['Documents Skipped', $stats['skipped']],
             ]
         );

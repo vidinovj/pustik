@@ -2,124 +2,26 @@
     <x-slot:title>{{ $title }}</x-slot:title>
 
     <div class="container-fluid px-4 py-3">
-        <!-- Filter Form -->
-        <form method="GET" action="{{ url('pusdatin') }}" class="form-container p-4 mb-4">
-            <!-- First Row - Document & Related Info -->
-            <div class="row g-3 mb-3">
-                <div class="col-md-3">
-                    <label for="jenis_dokumen" class="form-label fw-medium text-secondary">Jenis Dokumen</label>
-                    <input 
-                        type="text" 
-                        id="jenis_dokumen" 
-                        name="jenis_dokumen" 
-                        value="{{ request('jenis_dokumen') }}" 
-                        placeholder="Jenis Dokumen" 
-                        class="form-control">
-                </div>
+        @php
+        $filters = [
+            ['name' => 'jenis_dokumen', 'label' => 'Jenis Dokumen', 'type' => 'text', 'placeholder' => 'Jenis Dokumen', 'width' => 3],
+            ['name' => 'perihal_dokumen', 'label' => 'Perihal Dokumen', 'type' => 'text', 'placeholder' => 'Perihal Dokumen', 'width' => 3],
+            ['name' => 'satker_kemlu_terkait', 'label' => 'Satker Kemlu Terkait', 'type' => 'text', 'placeholder' => 'Satker Kemlu Terkait', 'width' => 3],
+            ['name' => 'kl_external_terkait', 'label' => 'K/L/I External Terkait', 'type' => 'text', 'placeholder' => 'K/L/I External Terkait', 'width' => 3],
+            ['name' => 'start_date_disahkan', 'label' => 'Tahun Disahkan (Awal)', 'type' => 'number', 'placeholder' => '', 'width' => 3],
+            ['name' => 'end_date_disahkan', 'label' => 'Tahun Disahkan (Akhir)', 'type' => 'number', 'placeholder' => '', 'width' => 3],
+            ['name' => 'start_date_berakhir', 'label' => 'Tanggal Berakhir (Awal)', 'type' => 'date', 'placeholder' => '', 'width' => 3],
+            ['name' => 'end_date_berakhir', 'label' => 'Tanggal Berakhir (Akhir)', 'type' => 'date', 'placeholder' => '', 'width' => 3],
+            ['name' => 'sort_by', 'label' => 'Sortir Berdasarkan', 'type' => 'select', 'placeholder' => 'Pilih', 'options' => [
+                'tanggal_disahkan_asc' => 'Tahun Disahkan (Terbaru)',
+                'tanggal_disahkan_desc' => 'Tahun Disahkan (Terlama)',
+                'tanggal_berakhir_asc' => 'Tanggal Berakhir (Terbaru)',
+                'tanggal_berakhir_desc' => 'Tanggal Berakhir (Terlama)',
+            ], 'width' => 4],
+        ];
+        @endphp
 
-                <div class="col-md-3">
-                    <label for="perihal_dokumen" class="form-label fw-medium text-secondary">Perihal Dokumen</label>
-                    <input 
-                        type="text" 
-                        id="perihal_dokumen" 
-                        name="perihal_dokumen" 
-                        value="{{ request('perihal_dokumen') }}" 
-                        placeholder="Perihal Dokumen" 
-                        class="form-control">
-                </div>
-
-                <div class="col-md-3">
-                    <label for="satker_kemlu_terkait" class="form-label fw-medium text-secondary">Satker Kemlu Terkait</label>
-                    <input 
-                        type="text" 
-                        id="satker_kemlu_terkait" 
-                        name="satker_kemlu_terkait" 
-                        value="{{ request('satker_kemlu_terkait') }}" 
-                        placeholder="Satker Kemlu Terkait" 
-                        class="form-control">
-                </div>
-
-                <div class="col-md-3">
-                    <label for="kl_external_terkait" class="form-label fw-medium text-secondary">K/L/I External Terkait</label>
-                    <input 
-                        type="text" 
-                        id="kl_external_terkait" 
-                        name="kl_external_terkait" 
-                        value="{{ request('kl_external_terkait') }}" 
-                        placeholder="K/L/I External Terkait" 
-                        class="form-control">
-                </div>
-            </div>
-
-            <!-- Second Row - Date Ranges -->
-            <div class="row g-3 mb-3">
-                <div class="col-md-3">
-                    <label for="start_date_disahkan" class="form-label fw-medium text-secondary">Tahun Disahkan (Awal)</label>
-                    <input 
-                        type="number" 
-                        id="start_date_disahkan" 
-                        name="start_date_disahkan" 
-                        value="{{ request('start_date_disahkan') }}" 
-                        class="form-control">
-                </div>
-
-                <div class="col-md-3">
-                    <label for="end_date_disahkan" class="form-label fw-medium text-secondary">Tahun Disahkan (Akhir)</label>
-                    <input 
-                        type="number" 
-                        id="end_date_disahkan" 
-                        name="end_date_disahkan" 
-                        value="{{ request('end_date_disahkan') }}" 
-                        class="form-control">
-                </div>
-
-                <div class="col-md-3">
-                    <label for="start_date_berakhir" class="form-label fw-medium text-secondary">Tanggal Berakhir (Awal)</label>
-                    <input 
-                        type="date" 
-                        id="start_date_berakhir" 
-                        name="start_date_berakhir" 
-                        value="{{ request('start_date_berakhir') }}" 
-                        class="form-control">
-                </div>
-
-                <div class="col-md-3">
-                    <label for="end_date_berakhir" class="form-label fw-medium text-secondary">Tanggal Berakhir (Akhir)</label>
-                    <input 
-                        type="date" 
-                        id="end_date_berakhir" 
-                        name="end_date_berakhir" 
-                        value="{{ request('end_date_berakhir') }}" 
-                        class="form-control">
-                </div>
-            </div>
-
-            <!-- Third Row - Sorting and Submit -->
-            <div class="row g-3 align-items-end">
-                <div class="col-md-4">
-                    <label for="sort_by" class="form-label fw-medium text-secondary">Sortir Berdasarkan</label>
-                    <select 
-                        id="sort_by" 
-                        name="sort_by" 
-                        class="form-select" 
-                        onchange="this.form.submit()">
-                        <option value="" disabled selected>Pilih</option>
-                        <option value="tanggal_disahkan_asc" {{ request('sort_by') == 'tanggal_disahkan_asc' ? 'selected' : '' }}>Tahun Disahkan (Terbaru)</option>
-                        <option value="tanggal_disahkan_desc" {{ request('sort_by') == 'tanggal_disahkan_desc' ? 'selected' : '' }}>Tahun Disahkan (Terlama)</option>
-                        <option value="tanggal_berakhir_asc" {{ request('sort_by') == 'tanggal_berakhir_asc' ? 'selected' : '' }}>Tanggal Berakhir (Terbaru)</option>
-                        <option value="tanggal_berakhir_desc" {{ request('sort_by') == 'tanggal_berakhir_desc' ? 'selected' : '' }}>Tanggal Berakhir (Terlama)</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <button 
-                        type="submit" 
-                        class="btn btn-filter px-4">
-                        Filter & Sortir
-                    </button>
-                </div>
-            </div>
-        </form>
+        <x-dynamic-filter-form :action="url('pusdatin')" :filters="$filters" />
 
         <!-- Results Table -->
         <div class="table-responsive">

@@ -7,140 +7,136 @@ use App\Helpers\MetadataDisplayHelper;
 ?>
 
 <x-layout>
-    <x-slot:title>{{ $document->title }}</x-slot:title>
+    <x-slot:title>{{ $location }}</x-slot:title>
 
     <div class="container-fluid px-4 py-3">
-        <!-- Document Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start">
-                            <div class="flex-grow-1 mb-3 mb-lg-0">
-                                <h1 class="h3 fw-bold text-dark mb-2">{{ $document->title }}</h1>
-                                
-                                <div class="row g-3">
-                                    <div class="col-md-6 col-lg-3">
-                                        <small class="text-muted d-block">Jenis Dokumen</small>
-                                        <span class="fw-medium">{{ $document->document_type }}</span>
-                                    </div>
-                                    
-                                    @if($document->document_number)
-                                    <div class="col-md-6 col-lg-3">
-                                        <small class="text-muted d-block">Nomor Dokumen</small>
-                                        <span class="fw-medium">{{ $document->document_number }}</span>
-                                    </div>
-                                    @endif
-                                    
-                                    @if($document->issue_year)
-                                    <div class="col-md-6 col-lg-3">
-                                        <small class="text-muted d-block">Tanggal Terbit</small>
-                                        <span class="fw-medium">{{ $document->issue_year }}</span>
-                                    </div>
-                                    @endif
-                                    
-                                    <div class="col-md-6 col-lg-3">
-                                        <small class="text-muted d-block">Status</small>
-                                        <span class="badge bg-success">{{ ucfirst($document->status) }}</span>
-                                    </div>
-                                </div>
-
-                                <!-- Additional Metadata -->
-                                @if($document->metadata && count($document->metadata) > 0)
-                                <div class="mt-3">
-                                    <small class="text-muted d-block mb-2">Informasi Tambahan</small>
-                                    <div class="row g-2">
-                                        @php
-                                            $displayableMetadata = MetadataDisplayHelper::getDisplayableMetadata($document->metadata);
-                                        @endphp
-                                        
-                                        @foreach($displayableMetadata as $key => $value)
-                                            @if($value && $key !== 'tanggal_berakhir')
-                                            <div class="col-md-6 col-lg-4">
-                                                <small class="text-muted">{{ ucwords(str_replace('_', ' ', $key)) }}:</small>
-                                                <span class="d-block">
-                                                    {{ MetadataDisplayHelper::displayValue($value) }}
-                                                </span>
-                                            </div>
-                                            @endif
-                                        @endforeach
-                                        
-                                        {{-- Special handling for TIK-related information --}}
-                                        @if(isset($document->metadata['tik_summary']))
-                                            @php
-                                                $tikSummary = $document->metadata['tik_summary'];
-                                            @endphp
-                                            
-                                            @if(isset($tikSummary['tik_score']))
-                                            <div class="col-md-6 col-lg-4">
-                                                <small class="text-muted">TIK Score:</small>
-                                                <span class="d-block">{{ $tikSummary['tik_score'] }}</span>
-                                            </div>
-                                            @endif
-                                            
-                                            @if(isset($tikSummary['relevance_level']))
-                                            <div class="col-md-6 col-lg-4">
-                                                <small class="text-muted">TIK Relevance:</small>
-                                                <span class="d-block badge bg-info">{{ ucfirst($tikSummary['relevance_level']) }}</span>
-                                            </div>
-                                            @endif
-                                            
-                                            @if(isset($tikSummary['found_keywords']) && is_array($tikSummary['found_keywords']))
-                                            <div class="col-md-12">
-                                                <small class="text-muted">TIK Keywords Found:</small>
-                                                <span class="d-block">
-                                                    {{ MetadataDisplayHelper::displayValue($tikSummary['found_keywords']) }}
-                                                </span>
-                                            </div>
-                                            @endif
-                                        @endif
-                                        
-                                        {{-- Display TIK keywords from column if available --}}
-                                        @if($document->tik_keywords && count($document->tik_keywords) > 0)
-                                        <div class="col-md-12">
-                                            <small class="text-muted">TIK Keywords (Column):</small>
-                                            <span class="d-block">
-                                                {{ MetadataDisplayHelper::displayValue($document->tik_keywords) }}
-                                            </span>
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
-                                @endif
+        <!-- Document Card -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start">
+                    <div class="flex-grow-1 mb-3 mb-lg-0">
+                        <h1 class="h3 fw-bold text-dark mb-2">{{ $document->title }}</h1>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6 col-lg-3">
+                                <small class="text-muted d-block">Jenis Dokumen</small>
+                                <span class="fw-medium">{{ $document->document_type }}</span>
                             </div>
                             
-                            <!-- Action Buttons -->
-                            <div class="d-flex flex-column gap-2">
-                                @if($hasSourceUrl)
-                                <a href="{{ $document->source_url }}" 
-                                   target="_blank" 
-                                   class="btn btn-primary btn-sm">
-                                    <i class="fas fa-external-link-alt me-1"></i>
-                                    Lihat Sumber Asli
-                                </a>
-                                @endif
-                                
-                                <a href="{{ route('documents.download', $document) }}" 
-                                   class="btn btn-outline-secondary btn-sm">
-                                    <i class="fas fa-download me-1"></i>
-                                    Download
-                                </a>
-                                
-                                <button type="button" 
-                                        class="btn btn-outline-secondary btn-sm"
-                                        onclick="window.history.back()">
-                                    <i class="fas fa-arrow-left me-1"></i>
-                                    Kembali
-                                </button>
+                            @if($document->document_number)
+                            <div class="col-md-6 col-lg-3">
+                                <small class="text-muted d-block">Nomor Dokumen</small>
+                                <span class="fw-medium">{{ $document->document_number }}</span>
+                            </div>
+                            @endif
+                            
+                            @if($document->issue_year)
+                            <div class="col-md-6 col-lg-3">
+                                <small class="text-muted d-block">Tanggal Terbit</small>
+                                <span class="fw-medium">{{ $document->issue_year }}</span>
+                            </div>
+                            @endif
+                            
+                            <div class="col-md-6 col-lg-3">
+                                <small class="text-muted d-block">Status</small>
+                                <span class="badge bg-success">{{ ucfirst($document->status) }}</span>
                             </div>
                         </div>
+
+                        <!-- Additional Metadata -->
+                        @if($document->metadata && count($document->metadata) > 0)
+                        <div class="mt-3">
+                            <small class="text-muted d-block mb-2">Informasi Tambahan</small>
+                            <div class="row g-2">
+                                @php
+                                    $displayableMetadata = MetadataDisplayHelper::getDisplayableMetadata($document->metadata);
+                                @endphp
+                                
+                                @foreach($displayableMetadata as $key => $value)
+                                    @if($value && $key !== 'tanggal_berakhir')
+                                    <div class="col-md-6 col-lg-4">
+                                        <small class="text-muted">{{ ucwords(str_replace('_', ' ', $key)) }}:</small>
+                                        <span class="d-block">
+                                            {{ MetadataDisplayHelper::displayValue($value) }}
+                                        </span>
+                                    </div>
+                                    @endif
+                                @endforeach
+                                
+                                {{-- Special handling for TIK-related information --}}
+                                @if(isset($document->metadata['tik_summary']))
+                                    @php
+                                        $tikSummary = $document->metadata['tik_summary'];
+                                    @endphp
+                                    
+                                    @if(isset($tikSummary['tik_score']))
+                                    <div class="col-md-6 col-lg-4">
+                                        <small class="text-muted">TIK Score:</small>
+                                        <span class="d-block">{{ $tikSummary['tik_score'] }}</span>
+                                    </div>
+                                    @endif
+                                    
+                                    @if(isset($tikSummary['relevance_level']))
+                                    <div class="col-md-6 col-lg-4">
+                                        <small class="text-muted">TIK Relevance:</small>
+                                        <span class="d-block badge bg-info">{{ ucfirst($tikSummary['relevance_level']) }}</span>
+                                    </div>
+                                    @endif
+                                    
+                                    @if(isset($tikSummary['found_keywords']) && is_array($tikSummary['found_keywords']))
+                                    <div class="col-md-12">
+                                        <small class="text-muted">TIK Keywords Found:</small>
+                                        <span class="d-block">
+                                            {{ MetadataDisplayHelper::displayValue($tikSummary['found_keywords']) }}
+                                        </span>
+                                    </div>
+                                    @endif
+                                @endif
+                                
+                                {{-- Display TIK keywords from column if available --}}
+                                @if($document->tik_keywords && count($document->tik_keywords) > 0)
+                                <div class="col-md-12">
+                                    <small class="text-muted">TIK Keywords (Column):</small>
+                                    <span class="d-block">
+                                        {{ MetadataDisplayHelper::displayValue($document->tik_keywords) }}
+                                    </span>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex flex-column gap-2">
+                        @if($hasSourceUrl)
+                        <a href="{{ $document->source_url }}" 
+                           target="_blank" 
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-external-link-alt me-1"></i>
+                            Lihat Sumber Asli
+                        </a>
+                        @endif
+                        
+                        <a href="{{ route('documents.download', $document) }}" 
+                           class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-download me-1"></i>
+                            Download
+                        </a>
+                        
+                        <button type="button" 
+                                class="btn btn-outline-secondary btn-sm"
+                                onclick="window.history.back()">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Kembali
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Document Content -->
-        <div class="row">
+        <div class="row mt-4">
             <div class="col-12">
                 @if($hasFullText)
                 <!-- Full Text Content -->

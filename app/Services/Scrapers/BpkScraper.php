@@ -1,21 +1,24 @@
 <?php
+
 // app/Services/Scrapers/BpkScraper.php
 // ENHANCEMENT: Add advanced entity-based search to existing working BpkScraper
 
 namespace App\Services\Scrapers;
 
 use App\Models\DocumentSource;
-use App\Services\Scrapers\EnhancedDocumentScraper;
-use App\Services\TikTermsService;
 use App\Services\DocumentClassifierService;
-use Illuminate\Support\Facades\Log;
+use App\Services\TikTermsService;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class BpkScraper extends BaseScraper
 {
     private EnhancedDocumentScraper $enhancedScraper;
+
     private int $minRelevanceScore = 5;
+
     protected ?int $limit = null; // Added property
+
     protected bool $dryRun = false; // Added property
 
     // TIK-focused search queries for BPK
@@ -27,65 +30,65 @@ class BpkScraper extends BaseScraper
         'PMSE', 'e-commerce', 'teknologi finansial', 'fintech', 'pembayaran digital', 'tanda tangan elektronik',
         'sertifikat elektronik', 'telekomunikasi', 'digitalisasi daerah', 'teknologi informasi 2024',
         'sistem elektronik 2024', 'digital 2023', 'informasi 2023', 'mencabut peraturan', 'perubahan atas',
-        'melaksanakan ketentuan'
+        'melaksanakan ketentuan',
     ];
-    
+
     // TIK-focused government entities (from your discovery)
     private array $entities = [
         '661' => [
             'name' => 'Kementerian Luar Negeri',
             'short' => 'Kemlu',
-            'focus' => 'diplomatic_technology'
+            'focus' => 'diplomatic_technology',
         ],
         '568' => [
             'name' => 'Kementerian Riset, Teknologi, dan Pendidikan Tinggi',
-            'short' => 'Kemristekdikti', 
-            'focus' => 'research_technology'
+            'short' => 'Kemristekdikti',
+            'focus' => 'research_technology',
         ],
         '676' => [
             'name' => 'Kementerian Komunikasi dan Digital',
             'short' => 'Komdigi',
-            'focus' => 'digital_infrastructure'
+            'focus' => 'digital_infrastructure',
         ],
         '603' => [
             'name' => 'Kementerian Komunikasi dan Informatika',
             'short' => 'Kominfo',
-            'focus' => 'telecommunications'
+            'focus' => 'telecommunications',
         ],
         '557' => [
             'name' => 'Badan Siber dan Sandi Negara',
             'short' => 'BSSN',
-            'focus' => 'cybersecurity'
+            'focus' => 'cybersecurity',
         ],
         '607' => [
             'name' => 'Badan Riset dan Inovasi Nasional',
             'short' => 'BRIN',
-            'focus' => 'innovation_research'
-        ]
+            'focus' => 'innovation_research',
+        ],
     ];
 
     // Advanced search keywords for entity-based searches
     private array $advancedSearchKeywords = [
-        'teknologi', 'digital', 'sistem informasi', 'komunikasi', 'cyber', 'elektronik', 'data'
+        'teknologi', 'digital', 'sistem informasi', 'komunikasi', 'cyber', 'elektronik', 'data',
     ];
 
     private array $testUrls = [
         'https://peraturan.bpk.go.id/Details/274494/uu-no-11-tahun-2008',
-        'https://peraturan.bpk.go.id/Details/37582/uu-no-19-tahun-2016', 
+        'https://peraturan.bpk.go.id/Details/37582/uu-no-19-tahun-2016',
         'https://peraturan.bpk.go.id/Details/229798/uu-no-27-tahun-2022',
     ];
 
     public function __construct(DocumentSource $source)
     {
         parent::__construct($source);
-        
+
         $this->enhancedScraper = new EnhancedDocumentScraper([
             'delay_min' => 3,
             'delay_max' => 7,
             'timeout' => 45,
-            'retries' => 3
+            'retries' => 3,
         ]);
-        
+
         $this->minRelevanceScore = $source->config['min_tik_score'] ?? 5;
     }
 
@@ -103,66 +106,66 @@ class BpkScraper extends BaseScraper
 
     public function scrape(): array
     {
-        Log::channel('legal-documents')->info("BpkScraper: Starting enhanced BPK scraping with advanced entity search");
-        
+        Log::channel('legal-documents')->info('BpkScraper: Starting enhanced BPK scraping with advanced entity search');
+
         $results = [];
         $strategies = $this->determineOptimalStrategies();
-        
+
         try {
             $testResults = $this->runStrategyTest($strategies);
             $bestStrategy = $this->selectBestStrategy($testResults);
-            
+
             Log::channel('legal-documents')->info("BPK Scraper selected strategy: {$bestStrategy}");
-            
+
             $documentUrls = $this->getUrlsFromAdvancedEntitySearch();
-            
+
             $documentUrls = array_slice($documentUrls, 0, 40);
-            
-            Log::channel('legal-documents')->info("BPK Scraper found " . count($documentUrls) . " URLs to process (including advanced entity search)");
-            
+
+            Log::channel('legal-documents')->info('BPK Scraper found '.count($documentUrls).' URLs to process (including advanced entity search)');
+
             $documentCount = 0;
             $totalProcessed = 0;
-            
+
             foreach ($documentUrls as $index => $url) {
                 Log::channel('legal-documents')->info("BPK Processing URL {$index}: {$url}");
-                
+
                 $strategies = [$bestStrategy];
                 if ($index % 8 === 0) {
                     $strategies = ['stealth', 'basic', 'mobile'];
                 }
-                
+
                 $documentData = $this->enhancedScraper->scrapeWithStrategies($url, $strategies);
-                
+
                 if ($documentData) {
                     $totalProcessed++;
-                    
+
                     $enrichedData = $this->applyFiltering($documentData, $url);
-                    
+
                     if ($enrichedData && $enrichedData['is_tik_related']) {
                         $document = $this->saveDocumentWithValidation($enrichedData);
-                        
+
                         if ($document) {
                             $results[] = $document;
                             $documentCount++;
                             $this->source->increment('total_documents');
-                            
+
                             Log::channel('legal-documents')->info("Relevant document saved: {$document->title} (Score: {$enrichedData['tik_relevance_score']})");
                         }
                     } else {
-                        Log::channel('legal-documents')->debug("Non-relevant document filtered out: " . ($documentData['title'] ?? 'Unknown'));
+                        Log::channel('legal-documents')->debug('Non-relevant document filtered out: '.($documentData['title'] ?? 'Unknown'));
                     }
                 } else {
                     Log::channel('legal-documents-errors')->warning("BPK: Failed to extract data from: {$url}");
                 }
-                
+
                 $this->adaptiveDelay($index, $documentCount);
-                
+
                 // Modified to respect $this->limit
                 if ($this->limit !== null && $documentCount >= $this->limit) {
                     Log::channel('legal-documents')->info("BPK: Reached target limit of {$this->limit} relevant documents");
                     break;
                 }
-                
+
                 if ($totalProcessed > 10) {
                     $successRate = $documentCount / $totalProcessed;
                     if ($successRate < 0.15) {
@@ -171,22 +174,22 @@ class BpkScraper extends BaseScraper
                     }
                 }
             }
-            
+
         } catch (\Exception $e) {
             Log::channel('legal-documents-errors')->error("BpkScraper: Error during scrape: {$e->getMessage()}");
             throw $e;
         }
-        
+
         $this->source->update(['last_scraped_at' => now()]);
         Log::channel('legal-documents')->info("BpkScraper: Completed with {$documentCount} relevant documents out of {$totalProcessed} processed");
-        
+
         return $results;
     }
 
     private function getUrlsFromAdvancedEntitySearch(): array
     {
         $urls = [];
-        Log::channel('legal-documents')->info("🎯 Starting Advanced Entity Search for relevant documents");
+        Log::channel('legal-documents')->info('🎯 Starting Advanced Entity Search for relevant documents');
         foreach ($this->advancedSearchKeywords as $keyword) {
             $searchUrl = $this->buildAdvancedEntitySearchUrl($keyword);
             Log::channel('legal-documents')->info("🔍 Advanced Entity Search: {$searchUrl}");
@@ -199,7 +202,7 @@ class BpkScraper extends BaseScraper
                 if ($response->successful()) {
                     $entityUrls = $this->extractDetailUrlsFromSearchResults($response->body());
                     $urls = array_merge($urls, $entityUrls);
-                    Log::channel('legal-documents')->info("Advanced search for '{$keyword}' found " . count($entityUrls) . " URLs from entities");
+                    Log::channel('legal-documents')->info("Advanced search for '{$keyword}' found ".count($entityUrls).' URLs from entities');
                     foreach ($entityUrls as $url) {
                         $this->markUrlWithEntitySource($url, $keyword);
                     }
@@ -208,11 +211,13 @@ class BpkScraper extends BaseScraper
                 }
                 sleep(3);
             } catch (\Exception $e) {
-                Log::channel('legal-documents-errors')->warning("Advanced entity search failed for keyword '{$keyword}': " . $e->getMessage());
+                Log::channel('legal-documents-errors')->warning("Advanced entity search failed for keyword '{$keyword}': ".$e->getMessage());
+
                 continue;
             }
         }
-        Log::channel('legal-documents')->info("🎯 Advanced Entity Search completed. Found " . count(array_unique($urls)) . " unique URLs");
+        Log::channel('legal-documents')->info('🎯 Advanced Entity Search completed. Found '.count(array_unique($urls)).' unique URLs');
+
         return array_unique($urls);
     }
 
@@ -224,18 +229,19 @@ class BpkScraper extends BaseScraper
         foreach (array_keys($this->entities) as $entityId) {
             $entityParams[] = "entitas={$entityId}";
         }
-        $queryString = http_build_query($params) . '&' . implode('&', $entityParams);
-        return $baseUrl . '?' . $queryString;
+        $queryString = http_build_query($params).'&'.implode('&', $entityParams);
+
+        return $baseUrl.'?'.$queryString;
     }
 
     private function markUrlWithEntitySource(string $url, string $keyword): void
     {
-        $cacheKey = 'bpk_entity_url_' . md5($url);
+        $cacheKey = 'bpk_entity_url_'.md5($url);
         cache()->put($cacheKey, [
             'search_keyword' => $keyword,
             'search_type' => 'advanced_entity_search',
             'entities_searched' => array_keys($this->entities),
-            'searched_at' => now()->toISOString()
+            'searched_at' => now()->toISOString(),
         ], 86400);
     }
 
@@ -244,15 +250,16 @@ class BpkScraper extends BaseScraper
         $title = $data['title'] ?? '';
         $content = $data['full_text'] ?? '';
         $metadata = $data['metadata'] ?? [];
-        $relevanceScore = TikTermsService::calculateTikScore($title . ' ' . $content);
+        $relevanceScore = TikTermsService::calculateTikScore($title.' '.$content);
 
         Log::channel('legal-documents')->info("Filtering: Document '{$title}' - Relevance Score: {$relevanceScore}, Min Score: {$this->minRelevanceScore}"); // Added log
 
         if ($relevanceScore < $this->minRelevanceScore) {
             Log::channel('legal-documents')->debug("Filtering: Document '{$title}' filtered out due to low relevance score."); // Added log
+
             return null;
         }
-        $keywords = TikTermsService::extractTikKeywords($title . ' ' . $content);
+        $keywords = TikTermsService::extractTikKeywords($title.' '.$content);
         $tempDocument = new \App\Models\LegalDocument(['title' => $title, 'full_text' => $content, 'metadata' => $metadata]);
         $documentCategory = DocumentClassifierService::classifyDocument($tempDocument);
         $entityInfo = $this->getEntitySourceInfo($url);
@@ -263,19 +270,21 @@ class BpkScraper extends BaseScraper
         $data['document_category'] = $documentCategory['category'] ?? 'general_technology';
         $data['metadata'] = array_merge($metadata, [
             'classification' => $documentCategory,
-            'score_breakdown' => $this->getScoreBreakdown($title . ' ' . $content),
+            'score_breakdown' => $this->getScoreBreakdown($title.' '.$content),
             'extraction_method' => 'bpk_scraper_with_entities',
             'filter_applied' => true,
             'min_score_threshold' => $this->minRelevanceScore,
             'entity_search_info' => $entityInfo,
-            'searched_entities' => $this->getEntityNames()
+            'searched_entities' => $this->getEntityNames(),
         ]);
+
         return $data;
     }
 
     private function getEntitySourceInfo(string $url): ?array
     {
-        $cacheKey = 'bpk_entity_url_' . md5($url);
+        $cacheKey = 'bpk_entity_url_'.md5($url);
+
         return cache()->get($cacheKey);
     }
 
@@ -285,6 +294,7 @@ class BpkScraper extends BaseScraper
         foreach ($this->entities as $id => $info) {
             $names[$id] = $info['name'];
         }
+
         return $names;
     }
 
@@ -294,11 +304,12 @@ class BpkScraper extends BaseScraper
             'entities_configured' => count($this->entities),
             'search_keywords' => count($this->advancedSearchKeywords),
             'entity_details' => $this->entities,
-            'last_search_urls' => []
+            'last_search_urls' => [],
         ];
         foreach (array_slice($this->advancedSearchKeywords, 0, 3) as $keyword) {
             $analytics['last_search_urls'][] = $this->buildAdvancedEntitySearchUrl($keyword);
         }
+
         return $analytics;
     }
 
@@ -311,24 +322,27 @@ class BpkScraper extends BaseScraper
                 $breakdown[$term] = $score;
             }
         }
+
         return $breakdown;
     }
 
     private function searchBpkForDocuments(string $query): array
     {
-        $searchUrl = "https://peraturan.bpk.go.id/Search?keywords=" . urlencode($query) . "&tentang=&nomor=";
+        $searchUrl = 'https://peraturan.bpk.go.id/Search?keywords='.urlencode($query).'&tentang=&nomor=';
         try {
             $response = Http::timeout(30)->withHeaders([
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language' => 'id-ID,id;q=0.9,en;q=0.8',
             ])->get($searchUrl);
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 return [];
             }
+
             return $this->extractDetailUrlsFromSearchResults($response->body());
         } catch (\Exception $e) {
             Log::channel('legal-documents-errors')->warning("BPK search failed for query: {$query} - {$e->getMessage()}");
+
             return [];
         }
     }
@@ -336,7 +350,9 @@ class BpkScraper extends BaseScraper
     private function extractDetailUrlsFromSearchResults(string $html): array
     {
         $dom = $this->parseHtml($html);
-        if (!$dom) return [];
+        if (! $dom) {
+            return [];
+        }
         $xpath = $this->createXPath($dom);
         $urls = [];
         $linkPatterns = ['//a[contains(@href, "/Details/")]/@href'];
@@ -350,6 +366,7 @@ class BpkScraper extends BaseScraper
                 }
             }
         }
+
         return array_unique($urls);
     }
 
@@ -364,6 +381,7 @@ class BpkScraper extends BaseScraper
                 return true;
             }
         }
+
         return false;
     }
 
@@ -373,14 +391,15 @@ class BpkScraper extends BaseScraper
             return $href;
         }
         if (strpos($href, '/') === 0) {
-            return $baseUrl . $href;
+            return $baseUrl.$href;
         }
-        return rtrim($baseUrl, '/') . '/' . ltrim($href, '/');
+
+        return rtrim($baseUrl, '/').'/'.ltrim($href, '/');
     }
 
     private function runStrategyTest(array $strategies): array
     {
-        Log::channel('legal-documents')->info("BPK: Running strategy test");
+        Log::channel('legal-documents')->info('BPK: Running strategy test');
         $results = [];
         foreach ($strategies as $strategy) {
             $results[$strategy] = ['success_count' => 0, 'total_time' => 0, 'error_count' => 0];
@@ -397,6 +416,7 @@ class BpkScraper extends BaseScraper
                 sleep(2);
             }
         }
+
         return $results;
     }
 
@@ -414,6 +434,7 @@ class BpkScraper extends BaseScraper
                 $bestStrategy = $strategy;
             }
         }
+
         return $bestStrategy;
     }
 
@@ -423,6 +444,7 @@ class BpkScraper extends BaseScraper
         if ($lastSuccess) {
             return [$lastSuccess, 'stealth', 'basic'];
         }
+
         return ['stealth', 'basic', 'mobile'];
     }
 
@@ -430,17 +452,18 @@ class BpkScraper extends BaseScraper
     {
         if ($this->dryRun) {
             Log::channel('legal-documents')->info("DRY RUN: Not saving document: {$data['title']}");
+
             return new \App\Models\LegalDocument($data);
         }
 
         if (empty($data['title']) || strlen($data['title']) < 10) {
             return null;
         }
-        
+
         // Prioritize URL-extracted document_type_code over title extraction
         $documentTypeCode = $data['document_type_code'] ?? null;
         $documentType = $data['document_type'] ?? $this->extractDocumentType($data['title']);
-        
+
         // If we have type code but no full type name, derive it
         if ($documentTypeCode && $documentType === 'Lainnya') {
             $typeMapping = [
@@ -450,11 +473,11 @@ class BpkScraper extends BaseScraper
                 'permen' => 'Peraturan Menteri',
                 'keppres' => 'Keputusan Presiden',
                 'kepmen' => 'Keputusan Menteri',
-                'inpres' => 'Instruksi Presiden'
+                'inpres' => 'Instruksi Presiden',
             ];
             $documentType = $typeMapping[$documentTypeCode] ?? 'Lainnya';
         }
-        
+
         $cleanData = [
             'title' => $this->cleanText($data['title']),
             'document_type' => $documentType,
@@ -470,15 +493,13 @@ class BpkScraper extends BaseScraper
             'tik_keywords' => $data['tik_keywords'] ?? [],
             'is_tik_related' => $data['is_tik_related'] ?? false,
             'document_type_code' => $documentTypeCode,
-            'checksum' => md5($data['title'] . ($data['document_number'] ?? '') . ($data['issue_year'] ?? ''))
+            'checksum' => md5($data['title'].($data['document_number'] ?? '').($data['issue_year'] ?? '')),
         ];
-        
+
         Log::info("Saving document with type_code: {$documentTypeCode}, type: {$documentType}");
-        
+
         return $this->saveDocument($cleanData);
     }
-
-    
 
     private function adaptiveDelay(int $index, int $successCount): void
     {
@@ -510,80 +531,82 @@ class BpkScraper extends BaseScraper
 
     public function debugPdfExtraction(string $url): array
     {
-        Log::info("=== DEBUG PDF EXTRACTION ===");
+        Log::info('=== DEBUG PDF EXTRACTION ===');
         Log::info("URL: {$url}");
-        
+
         $documentData = $this->enhancedScraper->scrapeWithStrategies($url, ['basic']);
-        
+
         if ($documentData) {
-            Log::info("Raw extracted data:");
-            Log::info("- Title: " . ($documentData['title'] ?? 'None'));
-            Log::info("- PDF URL: " . ($documentData['pdf_url'] ?? 'None'));
-            Log::info("- Source URL: " . ($documentData['source_url'] ?? 'None'));
-            
+            Log::info('Raw extracted data:');
+            Log::info('- Title: '.($documentData['title'] ?? 'None'));
+            Log::info('- PDF URL: '.($documentData['pdf_url'] ?? 'None'));
+            Log::info('- Source URL: '.($documentData['source_url'] ?? 'None'));
+
             $enrichedData = $this->applyFiltering($documentData, $url);
             if ($enrichedData) {
-                Log::info("Enriched data:");
-                Log::info("- PDF URL: " . ($enrichedData['pdf_url'] ?? 'None'));
+                Log::info('Enriched data:');
+                Log::info('- PDF URL: '.($enrichedData['pdf_url'] ?? 'None'));
             }
         } else {
-            Log::info("No document data extracted");
+            Log::info('No document data extracted');
         }
-        
+
         return $documentData ?? [];
     }
 
     private function extractDocumentType(string $title): string
     {
         $titleLower = strtolower($title);
-        
+
         // Enhanced patterns for Indonesian document types
         $types = [
             'uu' => [
                 'patterns' => ['undang-undang', 'uu no', 'uu nomor', 'law no'],
-                'name' => 'Undang-undang'
+                'name' => 'Undang-undang',
             ],
             'pp' => [
                 'patterns' => ['peraturan pemerintah', 'pp no', 'pp nomor', 'government regulation'],
-                'name' => 'Peraturan Pemerintah'
+                'name' => 'Peraturan Pemerintah',
             ],
             'perpres' => [
                 'patterns' => ['peraturan presiden', 'perpres no', 'perpres nomor', 'presidential regulation'],
-                'name' => 'Peraturan Presiden'
+                'name' => 'Peraturan Presiden',
             ],
             'permen' => [
                 'patterns' => [
                     'peraturan menteri', 'permen', 'peraturan mentri',
                     'menteri komunikasi', 'menteri luar negeri', 'menteri dalam negeri',
                     'menteri keuangan', 'menteri kesehatan', 'menteri pendidikan',
-                    'ministerial regulation'
+                    'ministerial regulation',
                 ],
-                'name' => 'Peraturan Menteri'
+                'name' => 'Peraturan Menteri',
             ],
             'keppres' => [
                 'patterns' => ['keputusan presiden', 'keppres no', 'keppres nomor', 'presidential decree'],
-                'name' => 'Keputusan Presiden'
+                'name' => 'Keputusan Presiden',
             ],
             'kepmen' => [
                 'patterns' => ['keputusan menteri', 'kepmen', 'ministerial decree'],
-                'name' => 'Keputusan Menteri'
+                'name' => 'Keputusan Menteri',
             ],
             'inpres' => [
                 'patterns' => ['instruksi presiden', 'inpres no', 'inpres nomor', 'presidential instruction'],
-                'name' => 'Instruksi Presiden'
-            ]
+                'name' => 'Instruksi Presiden',
+            ],
         ];
-        
+
         foreach ($types as $code => $config) {
             foreach ($config['patterns'] as $pattern) {
                 if (stripos($titleLower, $pattern) !== false) {
                     Log::info("Document type extracted from title: {$config['name']} (code: {$code}) via pattern: {$pattern}");
+
                     return $config['name'];
                 }
             }
         }
-        
+
         Log::warning("Could not extract document type from title: {$title}");
+
         return 'Lainnya';
     }
 }

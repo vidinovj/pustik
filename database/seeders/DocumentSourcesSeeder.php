@@ -32,7 +32,7 @@ class DocumentSourcesSeeder extends Seeder
                         'keamanan siber',
                         'sistem informasi',
                         'digital',
-                        'elektronik'
+                        'elektronik',
                     ],
                 ],
             ],
@@ -51,7 +51,7 @@ class DocumentSourcesSeeder extends Seeder
                         'teknologi informasi',
                         'sistem informasi',
                         'audit teknologi',
-                        'keamanan sistem'
+                        'keamanan sistem',
                     ],
                 ],
             ],
@@ -69,7 +69,7 @@ class DocumentSourcesSeeder extends Seeder
                         'sistem pemerintahan berbasis elektronik',
                         'reformasi birokrasi',
                         'inovasi pelayanan publik',
-                        'teknologi informasi pemerintah'
+                        'teknologi informasi pemerintah',
                     ],
                 ],
             ],
@@ -158,16 +158,16 @@ class DocumentSourcesSeeder extends Seeder
         }
 
         $this->command->info('Document sources seeded successfully.');
-        
+
         // Show summary
         $active = DocumentSource::where('is_active', true)->count();
         $inactive = DocumentSource::where('is_active', false)->count();
-        
+
         $this->command->info("Active sources: {$active}");
         $this->command->info("Inactive sources: {$inactive}");
         $this->command->line('');
         $this->command->info('✅ Working sources ready for scraping:');
-        
+
         DocumentSource::where('is_active', true)->each(function ($source) {
             $this->command->line("  • {$source->name}: {$source->base_url}");
         });

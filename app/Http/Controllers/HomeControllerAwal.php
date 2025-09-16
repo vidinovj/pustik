@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 class HomeControllerAwal extends Controller
 {
     /**
@@ -13,7 +11,7 @@ class HomeControllerAwal extends Controller
      */
     public function index()
     {
-        $title = ""; // Title for the home page
+        $title = ''; // Title for the home page
 
         // Return the home view with the title
         return view('home', compact('title'));

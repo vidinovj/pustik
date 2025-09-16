@@ -13,11 +13,11 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // $schedule->command('inspire')->hourly();
-        
+
         // Legal documents URL monitoring (will be added later)
         // $schedule->command('legal-docs:check-urls')->daily();
-        
-        // Legal documents sync (will be added later)  
+
+        // Legal documents sync (will be added later)
         // $schedule->command('legal-docs:sync')->hourly();
     }
 

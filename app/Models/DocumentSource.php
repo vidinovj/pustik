@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class DocumentSource extends Model
 {
     use HasUuids;
+
     protected $fillable = [
         'name',
         'type',
@@ -97,14 +98,14 @@ class DocumentSource extends Model
      */
     public function needsScraping(): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 
         $interval = $this->getConfig('scrape_interval', '24 hours');
         $lastScraped = $this->last_scraped_at;
 
-        if (!$lastScraped) {
+        if (! $lastScraped) {
             return true;
         }
 

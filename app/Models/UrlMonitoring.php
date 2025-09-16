@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class UrlMonitoring extends Model
 {
     use HasUuids;
+
     protected $table = 'url_monitoring';
 
     protected $fillable = [
@@ -48,7 +49,7 @@ class UrlMonitoring extends Model
     {
         return $query->where(function ($q) use ($hours) {
             $q->whereNull('last_checked_at')
-              ->orWhere('last_checked_at', '<', now()->subHours($hours));
+                ->orWhere('last_checked_at', '<', now()->subHours($hours));
         });
     }
 
@@ -70,7 +71,7 @@ class UrlMonitoring extends Model
     /**
      * Mark URL as broken.
      */
-    public function markAsBroken(int $httpStatus, string $error = null): void
+    public function markAsBroken(int $httpStatus, ?string $error = null): void
     {
         $this->update([
             'status' => 'broken',
@@ -101,6 +102,7 @@ class UrlMonitoring extends Model
     public function shouldNotify(): bool
     {
         $threshold = config('legal_documents.url_monitoring.notification_threshold', 3);
+
         return $this->failure_count >= $threshold;
     }
 }

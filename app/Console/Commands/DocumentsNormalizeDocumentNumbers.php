@@ -1,11 +1,11 @@
 <?php
+
 // app/Console/Commands/DocumentsNormalizeDocumentNumbers.php
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\LegalDocument;
-use Illuminate\Support\Str;
+use Illuminate\Console\Command;
 
 class DocumentsNormalizeDocumentNumbers extends Command
 {
@@ -30,22 +30,22 @@ class DocumentsNormalizeDocumentNumbers extends Command
     {
         $isDryRun = $this->option('dry-run');
         $isForce = $this->option('force');
-        
+
         if ($isDryRun) {
             $this->info('🔍 DRY RUN MODE - No changes will be saved');
         }
-        
+
         if ($isForce) {
             $this->info('💪 FORCE MODE - Re-normalizing all documents');
         }
 
         $documents = LegalDocument::all();
         $this->info("📋 Processing {$documents->count()} documents for number normalization...");
-        
+
         $stats = [
             'processed' => 0,
             'normalized' => 0,
-            'skipped' => 0
+            'skipped' => 0,
         ];
 
         foreach ($documents as $document) {
@@ -61,8 +61,8 @@ class DocumentsNormalizeDocumentNumbers extends Command
                 $this->info("📝 Document: {$document->title}");
                 $this->line("   document_number: \"{$originalNumber}\" → \"{$normalizedNumber}\"");
                 $this->line("   issue_year: \"{$document->issue_year}\" → \"{$normalizedYear}\"");
-                
-                if (!$isDryRun) {
+
+                if (! $isDryRun) {
                     $document->document_number = $normalizedNumber;
                     $document->issue_year = $normalizedYear;
                     $document->save();
@@ -82,7 +82,7 @@ class DocumentsNormalizeDocumentNumbers extends Command
     private function extractNormalizedDocumentData(LegalDocument $document, bool $force = false): array
     {
         // Combine title and source_url for a more robust search context.
-        $textToParse = $document->title . ' ' . $document->source_url;
+        $textToParse = $document->title.' '.$document->source_url;
 
         // Pattern 1: Slug format (e.g., /...-no-5-tahun-2020)
         if (preg_match('/-no-(\\d+)-tahun-(\\d{4})/i', $textToParse, $matches)) {

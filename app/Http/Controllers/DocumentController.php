@@ -1,11 +1,10 @@
 <?php
+
 // app/Http/Controllers/DocumentController.php
 
 namespace App\Http\Controllers;
 
 use App\Models\LegalDocument;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -21,6 +20,12 @@ class DocumentController extends Controller
             abort(404, 'Document not found or not available.');
         }
 
+        // Determine the location of the document
+        $location = 'Kebijakan Eksternal'; // Default to external
+        if ($document->documentSource && $document->documentSource->type === 'internal') {
+            $location = 'Kebijakan Internal';
+        }
+
         // Debug: Check what we're dealing with
         \Log::info('Document data:', [
             'id' => $document->id,
@@ -28,14 +33,15 @@ class DocumentController extends Controller
             'metadata_type' => gettype($document->metadata),
             'metadata' => $document->metadata,
             'full_text_type' => gettype($document->full_text),
-            'full_text_length' => is_string($document->full_text) ? strlen($document->full_text) : 'not_string'
+            'full_text_length' => is_string($document->full_text) ? strlen($document->full_text) : 'not_string',
         ]);
 
         return view('documents.show', [
             'document' => $document,
-            'hasFullText' => !empty($document->full_text),
-            'hasSourceUrl' => !empty($document->source_url),
-            'hasPdfUrl' => !empty($document->pdf_url),
+            'location' => $location,
+            'hasFullText' => ! empty($document->full_text),
+            'hasSourceUrl' => ! empty($document->source_url),
+            'hasPdfUrl' => ! empty($document->pdf_url),
         ]);
     }
 
@@ -51,7 +57,7 @@ class DocumentController extends Controller
         // Priority: Local file > PDF URL > Source URL > Full Text
         if ($document->file_path && Storage::disk('local')->exists($document->file_path)) {
             return response()->download(
-                Storage::disk('local')->path($document->file_path), 
+                Storage::disk('local')->path($document->file_path),
                 $document->file_name
             );
         }
@@ -67,7 +73,7 @@ class DocumentController extends Controller
         // If only full text is available, create a text file
         if ($document->full_text) {
             $filename = $this->generateFilename($document);
-            
+
             return response($document->full_text, 200)
                 ->header('Content-Type', 'text/plain')
                 ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
@@ -120,9 +126,9 @@ class DocumentController extends Controller
             'source_url' => $document->source_url,
             'pdf_url' => $pdfUrl,
             'metadata' => $processedMetadata,
-            
+
             // File information
-            'has_file' => !empty($document->file_path),
+            'has_file' => ! empty($document->file_path),
             'file_name' => $document->file_name,
             'file_type' => $document->file_type,
             'file_size' => $document->file_size,
@@ -135,7 +141,7 @@ class DocumentController extends Controller
      */
     public function proxyPdf(LegalDocument $document)
     {
-        if ($document->status !== 'active' || !$document->pdf_url) {
+        if ($document->status !== 'active' || ! $document->pdf_url) {
             abort(404, 'PDF not available.');
         }
 
@@ -150,17 +156,17 @@ class DocumentController extends Controller
                     ],
                     'timeout' => 30,
                     'follow_location' => true,
-                    'max_redirects' => 5
-                ]
+                    'max_redirects' => 5,
+                ],
             ]);
 
             // Fetch the PDF content
             $pdfContent = file_get_contents($document->pdf_url, false, $context);
-            
+
             if ($pdfContent === false) {
                 Log::warning('PDF Proxy: Could not fetch PDF', [
                     'document_id' => $document->id,
-                    'pdf_url' => $document->pdf_url
+                    'pdf_url' => $document->pdf_url,
                 ]);
                 abort(404, 'Could not retrieve PDF.');
             }
@@ -169,7 +175,7 @@ class DocumentController extends Controller
             if (substr($pdfContent, 0, 4) !== '%PDF') {
                 Log::warning('PDF Proxy: Retrieved content is not a PDF', [
                     'document_id' => $document->id,
-                    'content_start' => substr($pdfContent, 0, 50)
+                    'content_start' => substr($pdfContent, 0, 50),
                 ]);
                 abort(404, 'Retrieved content is not a valid PDF.');
             }
@@ -178,14 +184,14 @@ class DocumentController extends Controller
 
             return response($pdfContent, 200)
                 ->header('Content-Type', 'application/pdf')
-                ->header('Content-Disposition', 'inline; filename="' . $filename . '"') // Force inline display
+                ->header('Content-Disposition', 'inline; filename="'.$filename.'"') // Force inline display
                 ->header('X-Frame-Options', 'SAMEORIGIN')
                 ->header('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
-                
+
         } catch (\Exception $e) {
-            Log::error('PDF Proxy Error: ' . $e->getMessage(), [
+            Log::error('PDF Proxy Error: '.$e->getMessage(), [
                 'document_id' => $document->id,
-                'pdf_url' => $document->pdf_url
+                'pdf_url' => $document->pdf_url,
             ]);
             abort(404, 'Could not retrieve PDF.');
         }
@@ -209,25 +215,25 @@ class DocumentController extends Controller
         $title = preg_replace('/[^a-zA-Z0-9\s]/', '', $document->title);
         $title = preg_replace('/\s+/', '_', trim($title));
         $title = substr($title, 0, 50); // Limit length
-        
+
         $date = $document->issue_year ?? 'no-year';
-        
+
         return "{$title}_{$date}.{$extension}";
     }
-   
+
     /**
      * PDF Proxy - Convert BPK download URLs to viewable PDFs
      */
     public function pdfProxy(LegalDocument $document)
     {
-        if ($document->status !== 'active' || !$document->pdf_url) {
+        if ($document->status !== 'active' || ! $document->pdf_url) {
             abort(404, 'PDF not available.');
         }
 
         try {
             Log::info('PDF Proxy: Fetching PDF', [
                 'document_id' => $document->id,
-                'pdf_url' => $document->pdf_url
+                'pdf_url' => $document->pdf_url,
             ]);
 
             // Use Laravel HTTP client with proper headers
@@ -239,10 +245,10 @@ class DocumentController extends Controller
                 ])
                 ->get($document->pdf_url);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 Log::warning('PDF Proxy: HTTP request failed', [
                     'status' => $response->status(),
-                    'document_id' => $document->id
+                    'document_id' => $document->id,
                 ]);
                 abort(404, 'Could not retrieve PDF from source.');
             }
@@ -253,7 +259,7 @@ class DocumentController extends Controller
             if (substr($pdfContent, 0, 4) !== '%PDF') {
                 Log::warning('PDF Proxy: Content is not a PDF', [
                     'document_id' => $document->id,
-                    'content_start' => substr($pdfContent, 0, 100)
+                    'content_start' => substr($pdfContent, 0, 100),
                 ]);
                 abort(404, 'Retrieved content is not a valid PDF.');
             }
@@ -263,16 +269,16 @@ class DocumentController extends Controller
             // Return PDF with INLINE headers to prevent download
             return response($pdfContent)
                 ->header('Content-Type', 'application/pdf')
-                ->header('Content-Disposition', 'inline; filename="' . $filename . '"')
+                ->header('Content-Disposition', 'inline; filename="'.$filename.'"')
                 ->header('Content-Length', strlen($pdfContent))
                 ->header('Accept-Ranges', 'bytes')
                 ->header('X-Frame-Options', 'SAMEORIGIN')
                 ->header('Cache-Control', 'public, max-age=3600');
 
         } catch (\Exception $e) {
-            Log::error('PDF Proxy Error: ' . $e->getMessage(), [
+            Log::error('PDF Proxy Error: '.$e->getMessage(), [
                 'document_id' => $document->id,
-                'pdf_url' => $document->pdf_url
+                'pdf_url' => $document->pdf_url,
             ]);
             abort(500, 'Error retrieving PDF.');
         }
@@ -287,26 +293,26 @@ class DocumentController extends Controller
             abort(404, 'Document not available.');
         }
 
-        if (!$document->file_path || !Storage::disk('local')->exists($document->file_path)) {
+        if (! $document->file_path || ! Storage::disk('local')->exists($document->file_path)) {
             abort(404, 'File not found.');
         }
 
         try {
             $filePath = Storage::disk('local')->path($document->file_path);
             $mimeType = Storage::disk('local')->mimeType($document->file_path);
-            
+
             // Log file access
             Log::info('File served', [
                 'document_id' => $document->id,
                 'file_name' => $document->file_name,
-                'user_ip' => request()->ip()
+                'user_ip' => request()->ip(),
             ]);
 
             // For PDF files, serve inline for preview
             if ($document->file_type === 'pdf') {
                 return response()->file($filePath, [
                     'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="' . $document->file_name . '"',
+                    'Content-Disposition' => 'inline; filename="'.$document->file_name.'"',
                     'Cache-Control' => 'public, max-age=3600',
                 ]);
             }
@@ -317,9 +323,9 @@ class DocumentController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('File serving error: ' . $e->getMessage(), [
+            Log::error('File serving error: '.$e->getMessage(), [
                 'document_id' => $document->id,
-                'file_path' => $document->file_path
+                'file_path' => $document->file_path,
             ]);
             abort(500, 'Error serving file.');
         }

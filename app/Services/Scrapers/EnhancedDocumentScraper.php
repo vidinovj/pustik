@@ -1,19 +1,18 @@
 <?php
+
 // app/Services/Scrapers/EnhancedDocumentScraper.php
 
 namespace App\Services\Scrapers;
 
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class EnhancedDocumentScraper
 {
     private array $userAgents = [
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     ];
 
     private array $config;
@@ -26,7 +25,7 @@ class EnhancedDocumentScraper
             'timeout' => 45,
             'retries' => 3,
             'use_proxy' => false,
-            'proxy_rotation' => false
+            'proxy_rotation' => false,
         ], $config);
     }
 
@@ -34,8 +33,8 @@ class EnhancedDocumentScraper
     {
         foreach ($strategies as $strategy) {
             Log::info("Trying strategy: {$strategy} for {$url}");
-            
-            $result = match($strategy) {
+
+            $result = match ($strategy) {
                 'stealth' => $this->scrapeStealth($url),
                 'basic' => $this->scrapeBasic($url),
                 'mobile' => $this->scrapeMobile($url),
@@ -45,6 +44,7 @@ class EnhancedDocumentScraper
 
             if ($result) {
                 Log::info("Success with strategy: {$strategy}");
+
                 return $result;
             }
 
@@ -57,26 +57,30 @@ class EnhancedDocumentScraper
     private function scrapeStealth(string $url): ?array
     {
         $nodeScript = $this->generateStealthScript($url);
-        $scriptPath = storage_path('app/temp_stealth_' . uniqid() . '.js');
-        
+        $scriptPath = storage_path('app/temp_stealth_'.uniqid().'.js');
+
         try {
             file_put_contents($scriptPath, $nodeScript);
-            
+
             $command = "node {$scriptPath} 2>&1";
             $output = shell_exec($command);
-            
+
             unlink($scriptPath);
-            
-            if (!$output || stripos($output, 'error') !== false) {
+
+            if (! $output || stripos($output, 'error') !== false) {
                 return null;
             }
 
             $data = json_decode($output, true);
+
             return $this->extractDocumentInfo($data['html'] ?? '', $url);
-            
+
         } catch (\Exception $e) {
-            Log::error("Stealth scraping failed: " . $e->getMessage());
-            if (file_exists($scriptPath)) unlink($scriptPath);
+            Log::error('Stealth scraping failed: '.$e->getMessage());
+            if (file_exists($scriptPath)) {
+                unlink($scriptPath);
+            }
+
             return null;
         }
     }
@@ -91,11 +95,11 @@ class EnhancedDocumentScraper
             if ($response->successful()) {
                 return $this->extractDocumentInfo($response->body(), $url);
             }
-            
+
         } catch (\Exception $e) {
-            Log::error("Basic scraping failed: " . $e->getMessage());
+            Log::error('Basic scraping failed: '.$e->getMessage());
         }
-        
+
         return null;
     }
 
@@ -103,7 +107,7 @@ class EnhancedDocumentScraper
     {
         try {
             $headers = $this->getMobileHeaders();
-            
+
             $response = Http::withHeaders($headers)
                 ->timeout($this->config['timeout'])
                 ->get($url);
@@ -111,11 +115,11 @@ class EnhancedDocumentScraper
             if ($response->successful()) {
                 return $this->extractDocumentInfo($response->body(), $url);
             }
-            
+
         } catch (\Exception $e) {
-            Log::error("Mobile scraping failed: " . $e->getMessage());
+            Log::error('Mobile scraping failed: '.$e->getMessage());
         }
-        
+
         return null;
     }
 
@@ -123,26 +127,30 @@ class EnhancedDocumentScraper
     {
         // For sites with heavy JS - requires selenium setup
         $pythonScript = $this->generateSeleniumScript($url);
-        $scriptPath = storage_path('app/temp_selenium_' . uniqid() . '.py');
-        
+        $scriptPath = storage_path('app/temp_selenium_'.uniqid().'.py');
+
         try {
             file_put_contents($scriptPath, $pythonScript);
-            
+
             $command = "python3 {$scriptPath} 2>&1";
             $output = shell_exec($command);
-            
+
             unlink($scriptPath);
-            
-            if (!$output || stripos($output, 'error') !== false) {
+
+            if (! $output || stripos($output, 'error') !== false) {
                 return null;
             }
 
             $data = json_decode($output, true);
+
             return $this->extractDocumentInfo($data['html'] ?? '', $url);
-            
+
         } catch (\Exception $e) {
-            Log::error("Selenium scraping failed: " . $e->getMessage());
-            if (file_exists($scriptPath)) unlink($scriptPath);
+            Log::error('Selenium scraping failed: '.$e->getMessage());
+            if (file_exists($scriptPath)) {
+                unlink($scriptPath);
+            }
+
             return null;
         }
     }
@@ -289,18 +297,19 @@ except Exception as e:
             'checking your browser',
             'security check',
             'captcha',
-            'blocked'
+            'blocked',
         ];
 
         $htmlLower = strtolower($html);
         foreach ($blockingPatterns as $pattern) {
             if (stripos($htmlLower, $pattern) !== false) {
                 Log::warning("Detected blocking pattern: {$pattern} in {$url}");
+
                 return null;
             }
         }
 
-        $dom = new \DOMDocument();
+        $dom = new \DOMDocument;
         @$dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
         $xpath = new \DOMXPath($dom);
 
@@ -319,18 +328,18 @@ except Exception as e:
                 '//div[@class="title"]//text()',
                 '//div[contains(@class, "document-title")]//text()',
                 '//*[contains(@class, "judul")]//text()',
-                '//title'
+                '//title',
             ],
             'number' => [
                 '//*[contains(text(), "Nomor")]//text()',
                 '//*[contains(text(), "No.")]//text()',
-                '//*[contains(@class, "nomor")]//text()'
+                '//*[contains(@class, "nomor")]//text()',
             ],
             'date' => [
                 '//*[contains(text(), "Tahun")]//text()',
                 '//*[contains(@class, "tahun")]//text()',
                 '//time/@datetime',
-                '//*[contains(@class, "date")]//text()'
+                '//*[contains(@class, "date")]//text()',
             ],
             'pdf_url' => [
                 '//a[contains(@href, ".pdf")]/@href',
@@ -344,18 +353,18 @@ except Exception as e:
                 '//a[contains(@class, "download")]/@href',
                 '//*[@data-pdf-url]/@data-pdf-url',
                 '//a[contains(@title, "PDF")]/@href',
-                '//a[contains(@title, "Download")]/@href'
-            ]
+                '//a[contains(@title, "Download")]/@href',
+            ],
         ];
 
         $data = [];
-        
+
         foreach ($patterns as $field => $xpaths) {
             foreach ($xpaths as $xpathQuery) {
                 $nodes = $xpath->query($xpathQuery);
                 if ($nodes->length > 0) {
                     $value = trim($nodes->item(0)->textContent ?? $nodes->item(0)->nodeValue ?? '');
-                    if (!empty($value)) {
+                    if (! empty($value)) {
                         $data[$field] = $value;
                         if ($field === 'pdf_url') {
                             Log::info("PDF URL found via XPath: {$value} using pattern: {$xpathQuery}");
@@ -373,7 +382,7 @@ except Exception as e:
                 '/<a[^>]*href=["\']([^"\']*\/pdf\/[^"\']*)["\'][^>]*>/i',
                 '/<a[^>]*href=["\']([^"\']*download[^"\']*.pdf[^"\']*)["\'][^>]*>/i',
             ];
-            
+
             foreach ($pdfPatterns as $pattern) {
                 if (preg_match($pattern, $html, $matches)) {
                     $data['pdf_url'] = $matches[1];
@@ -388,7 +397,7 @@ except Exception as e:
             if (preg_match('/<title[^>]*>(.+?)<\/title>/is', $html, $matches)) {
                 $title = trim(strip_tags($matches[1]));
                 // Filter out generic titles
-                if (!empty($title) && !in_array(strtolower($title), ['bpk', 'loading', 'error', 'untitled'])) {
+                if (! empty($title) && ! in_array(strtolower($title), ['bpk', 'loading', 'error', 'untitled'])) {
                     $data['title'] = $title;
                 }
             }
@@ -414,92 +423,94 @@ except Exception as e:
             'source_url' => $url,
             'full_text' => $data['title'] ?? '', // Basic full_text, will be enhanced by filtering
             'extracted_at' => now(),
-            'extraction_method' => 'enhanced_multi_strategy'
+            'extraction_method' => 'enhanced_multi_strategy',
         ];
     }
 
     private function extractFromBpkUrl(string $url): array
     {
         $data = [];
-        
-        Log::info("=== URL PARSING DEBUG ===");
+
+        Log::info('=== URL PARSING DEBUG ===');
         Log::info("Input URL: {$url}");
-        
+
         // Step 1: Extract the slug part
         if (preg_match('#/Details/(\d+)/([^/?]+)#i', $url, $urlMatches)) {
             $detailId = $urlMatches[1];
             $fullSlug = $urlMatches[2];
-            
+
             Log::info("Detail ID: {$detailId}");
             Log::info("Full slug: '{$fullSlug}'");
-            
+
             // Step 2: Multiple parsing strategies
-            
+
             // Strategy 1: Standard pattern
             if (preg_match('/^(.+?)-no-(\d+)-tahun-(\d{4})$/i', $fullSlug, $matches)) {
                 $typeSlug = $matches[1];
                 $number = $matches[2];
                 $year = $matches[3];
-                
+
                 Log::info("Strategy 1 success - Type slug: '{$typeSlug}', Number: {$number}, Year: {$year}");
             }
             // Strategy 2: Handle variations like "permenlu-no-9-tahun-2018"
-            else if (preg_match('/^([a-z]+(?:[a-z0-9]*)*)-no-(\d+)-tahun-(\d{4})$/i', $fullSlug, $matches)) {
+            elseif (preg_match('/^([a-z]+(?:[a-z0-9]*)*)-no-(\d+)-tahun-(\d{4})$/i', $fullSlug, $matches)) {
                 $typeSlug = $matches[1];
-                $number = $matches[2]; 
+                $number = $matches[2];
                 $year = $matches[3];
-                
+
                 Log::info("Strategy 2 success - Type slug: '{$typeSlug}', Number: {$number}, Year: {$year}");
             }
             // Strategy 3: Split and parse manually
             else {
                 $parts = explode('-', $fullSlug);
-                Log::info("Strategy 3 - Manual split: " . json_encode($parts));
-                
+                Log::info('Strategy 3 - Manual split: '.json_encode($parts));
+
                 if (count($parts) >= 5) { // type-no-number-tahun-year
                     $typeSlug = $parts[0];
                     $number = $parts[2] ?? null;
                     $year = $parts[4] ?? null;
-                    
+
                     if ($parts[1] === 'no' && $parts[3] === 'tahun' && is_numeric($number) && is_numeric($year)) {
                         Log::info("Strategy 3 success - Type slug: '{$typeSlug}', Number: {$number}, Year: {$year}");
                     } else {
-                        Log::warning("Strategy 3 failed - Invalid parts structure");
+                        Log::warning('Strategy 3 failed - Invalid parts structure');
+
                         return $data;
                     }
                 } else {
-                    Log::warning("Strategy 3 failed - Not enough parts: " . count($parts));
+                    Log::warning('Strategy 3 failed - Not enough parts: '.count($parts));
+
                     return $data;
                 }
             }
-            
+
             // Now map the type slug to codes
             $typeMapping = [
                 'uu' => 'uu',
                 'pp' => 'pp',
-                'perpres' => 'perpres', 
+                'perpres' => 'perpres',
                 'keppres' => 'keppres',
                 'inpres' => 'inpres',
-                'perda' => 'perda'
+                'perda' => 'perda',
             ];
-            
+
             // All ministry variations map to 'permen'
             $ministryPrefixes = [
                 'permen', 'permenkominfo', 'permenkomdigi', 'permenkumham', 'permendagri',
                 'permenkes', 'permendikbud', 'permendikbudristek', 'permenkeu', 'permentan',
                 'permenhub', 'permenlu', 'permenristekdikti', 'permenedag', 'permenperin',
                 'permenkopukm', 'permenpopar', 'permenjamsos', 'permenaker', 'permentrans',
-                'permenpan', 'permendesa', 'permenpera', 'permensos', 'permenlhk'
+                'permenpan', 'permendesa', 'permenpera', 'permensos', 'permenlhk',
             ];
-            
+
             if (in_array($typeSlug, $ministryPrefixes) || str_starts_with($typeSlug, 'permen')) {
                 $typeMapping[$typeSlug] = 'permen';
             }
-            
+
             $data['document_number'] = $number;
-            $data['issue_year'] = (int)$year;
+            $data['issue_year'] = (int) $year;
             $data['document_type_code'] = $typeMapping[$typeSlug] ?? null;
-            
+
             // Derive full document type from code
             $typeNameMapping = [
                 'uu' => 'Undang-undang',
@@ -509,54 +520,58 @@ except Exception as e:
                 'keppres' => 'Keputusan Presiden',
                 'kepmen' => 'Keputusan Menteri',
                 'inpres' => 'Instruksi Presiden',
-                'perda' => 'Peraturan Daerah'
+                'perda' => 'Peraturan Daerah',
             ];
-            
+
             $data['document_type'] = $typeNameMapping[$data['document_type_code']] ?? 'Lainnya';
-            
+
             Log::info("FINAL RESULT - Code: '{$data['document_type_code']}', Type: '{$data['document_type']}', Number: {$data['document_number']}, Year: {$data['issue_year']}");
-            
-            if (!$data['document_type_code']) {
+
+            if (! $data['document_type_code']) {
                 Log::warning("Type mapping failed for slug: '{$typeSlug}'");
             }
-            
+
         } else {
             Log::warning("Could not match URL pattern for: {$url}");
         }
-        
-        Log::info("=== END URL PARSING DEBUG ===");
-        
+
+        Log::info('=== END URL PARSING DEBUG ===');
+
         return $data;
     }
 
     private function parseDate(string $dateText): ?int
     {
         if (preg_match('/(\d{4})/', $dateText, $matches)) {
-            $year = (int)$matches[1];
+            $year = (int) $matches[1];
             // Sanity check for reasonable year range
             if ($year >= 1945 && $year <= date('Y') + 1) {
                 return $year;
             }
         }
+
         return null;
     }
+
     private function resolveUrl(string $relativeUrl, string $baseUrl): ?string
     {
-        if (empty($relativeUrl)) return null;
-        
+        if (empty($relativeUrl)) {
+            return null;
+        }
+
         if (filter_var($relativeUrl, FILTER_VALIDATE_URL)) {
             return $relativeUrl;
         }
-        
+
         $parsedBase = parse_url($baseUrl);
         $scheme = $parsedBase['scheme'] ?? 'https';
         $host = $parsedBase['host'] ?? '';
-        
+
         if (strpos($relativeUrl, '/') === 0) {
             return "{$scheme}://{$host}{$relativeUrl}";
         }
-        
-        return "{$scheme}://{$host}/" . ltrim($relativeUrl, '/');
+
+        return "{$scheme}://{$host}/".ltrim($relativeUrl, '/');
     }
 
     private function getRandomHeaders(): array

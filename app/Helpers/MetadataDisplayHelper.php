@@ -1,4 +1,5 @@
 <?php
+
 // app/Helpers/MetadataDisplayHelper.php
 
 namespace App\Helpers;
@@ -35,7 +36,7 @@ class MetadataDisplayHelper
         }
 
         // Fallback for objects or other types
-        return '[' . gettype($value) . ']';
+        return '['.gettype($value).']';
     }
 
     /**
@@ -58,14 +59,15 @@ class MetadataDisplayHelper
         }
 
         // Check if all values are simple (string/number/bool)
-        $allSimple = array_reduce($value, function($carry, $item) {
+        $allSimple = array_reduce($value, function ($carry, $item) {
             return $carry && (is_string($item) || is_numeric($item) || is_bool($item));
         }, true);
 
         if ($allSimple) {
-            $displayValues = array_map(function($item) {
+            $displayValues = array_map(function ($item) {
                 return is_bool($item) ? ($item ? 'Yes' : 'No') : (string) $item;
             }, $value);
+
             return implode(', ', $displayValues);
         }
 
@@ -74,22 +76,25 @@ class MetadataDisplayHelper
             $displayItems = [];
             $count = 0;
             foreach ($value as $key => $item) {
-                if ($count >= 3) break; // Show max 3 items
-                
-                $displayKey = is_numeric($key) ? '' : $key . ': ';
+                if ($count >= 3) {
+                    break;
+                } // Show max 3 items
+
+                $displayKey = is_numeric($key) ? '' : $key.': ';
                 $displayValue = self::displayValue($item, $maxDepth, $currentDepth + 1);
-                $displayItems[] = $displayKey . $displayValue;
+                $displayItems[] = $displayKey.$displayValue;
                 $count++;
             }
-            
+
             $result = implode(', ', $displayItems);
             if (count($value) > 3) {
-                $result .= ' and ' . (count($value) - 3) . ' more...';
+                $result .= ' and '.(count($value) - 3).' more...';
             }
+
             return $result;
         }
 
-        return '[' . count($value) . ' items]';
+        return '['.count($value).' items]';
     }
 
     /**
@@ -97,9 +102,12 @@ class MetadataDisplayHelper
      */
     private static function isTikKeywordsArray(array $value): bool
     {
-        if (empty($value)) return false;
-        
+        if (empty($value)) {
+            return false;
+        }
+
         $firstItem = reset($value);
+
         return is_array($firstItem) && isset($firstItem['term']) && isset($firstItem['score']);
     }
 
@@ -108,16 +116,18 @@ class MetadataDisplayHelper
      */
     private static function displayTikKeywords(array $keywords): string
     {
-        $terms = array_map(function($keyword) {
+        $terms = array_map(function ($keyword) {
             if (is_array($keyword) && isset($keyword['term'])) {
                 $score = isset($keyword['score']) ? " ({$keyword['score']})" : '';
-                return $keyword['term'] . $score;
+
+                return $keyword['term'].$score;
             }
+
             return is_string($keyword) ? $keyword : '[Invalid keyword]';
         }, $keywords);
 
-        return implode(', ', array_slice($terms, 0, 5)) . 
-               (count($terms) > 5 ? ' and ' . (count($terms) - 5) . ' more...' : '');
+        return implode(', ', array_slice($terms, 0, 5)).
+               (count($terms) > 5 ? ' and '.(count($terms) - 5).' more...' : '');
     }
 
     /**
@@ -125,12 +135,15 @@ class MetadataDisplayHelper
      */
     private static function isFoundKeywordsArray(array $value): bool
     {
-        if (empty($value)) return false;
-        
+        if (empty($value)) {
+            return false;
+        }
+
         $firstItem = reset($value);
-        return is_array($firstItem) && 
-               isset($firstItem['term']) && 
-               isset($firstItem['score']) && 
+
+        return is_array($firstItem) &&
+               isset($firstItem['term']) &&
+               isset($firstItem['score']) &&
                isset($firstItem['category']);
     }
 
@@ -139,12 +152,12 @@ class MetadataDisplayHelper
      */
     private static function displayFoundKeywords(array $keywords): string
     {
-        $terms = array_map(function($keyword) {
+        $terms = array_map(function ($keyword) {
             return $keyword['term'] ?? '[Invalid term]';
         }, $keywords);
 
-        return implode(', ', array_slice($terms, 0, 5)) . 
-               (count($terms) > 5 ? ' and ' . (count($terms) - 5) . ' more...' : '');
+        return implode(', ', array_slice($terms, 0, 5)).
+               (count($terms) > 5 ? ' and '.(count($terms) - 5).' more...' : '');
     }
 
     /**
@@ -185,6 +198,7 @@ class MetadataDisplayHelper
                 }
             }
         }
+
         return false;
     }
 }

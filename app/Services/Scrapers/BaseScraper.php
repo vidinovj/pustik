@@ -2,21 +2,25 @@
 
 namespace App\Services\Scrapers;
 
+use App\Models\ApiLog;
 use App\Models\DocumentSource;
 use App\Models\LegalDocument;
-use App\Models\ApiLog;
 use App\Models\UrlMonitoring;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use DOMDocument;
 use DOMXPath;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 abstract class BaseScraper
 {
     protected DocumentSource $source;
+
     protected array $config;
+
     protected int $requestDelay = 2; // seconds between requests
+
     protected int $timeout = 30;
+
     protected array $headers = [];
 
     public function __construct(DocumentSource $source)
@@ -48,25 +52,25 @@ abstract class BaseScraper
     protected function makeRequest(string $url): ?string
     {
         $startTime = microtime(true);
-        
+
         try {
             Log::channel('legal-documents')->info("Scraping URL: {$url}");
-            
+
             // Check rate limiting
             $this->respectRateLimit();
-            
+
             // Make request
             // Path to the Puppeteer script
             $puppeteerScriptPath = base_path('storage/app/puppeteer_scraper.cjs');
 
             // Build the command to execute the Puppeteer script
-            $command = "node {$puppeteerScriptPath} " . escapeshellarg($url);
+            $command = "node {$puppeteerScriptPath} ".escapeshellarg($url);
 
             // Execute the command
             // Using shell_exec directly here, as Http::legalDocsScraper() is for Guzzle
-            $processResult = shell_exec($command . ' 2>&1'); // Capture both stdout and stderr
+            $processResult = shell_exec($command.' 2>&1'); // Capture both stdout and stderr
 
-            $responseTime = (int)((microtime(true) - $startTime) * 1000);
+            $responseTime = (int) ((microtime(true) - $startTime) * 1000);
 
             // Check for errors from the Puppeteer script
             if (str_contains($processResult, 'Error scraping')) {
@@ -81,6 +85,7 @@ abstract class BaseScraper
                 $monitoring = UrlMonitoring::monitor($url);
                 $monitoring->markAsBroken(500, $processResult);
                 Log::channel('legal-documents-errors')->error("Puppeteer scraping failed for {$url}: {$processResult}");
+
                 return null;
             }
 
@@ -101,12 +106,12 @@ abstract class BaseScraper
             // Update URL monitoring
             $monitoring = UrlMonitoring::monitor($url);
             $monitoring->markAsWorking($statusCode);
-            
+
             return $html;
 
         } catch (\Exception $e) {
-            $responseTime = (int)((microtime(true) - $startTime) * 1000);
-            
+            $responseTime = (int) ((microtime(true) - $startTime) * 1000);
+
             // Log the error
             ApiLog::logRequest(
                 $this->source->id,
@@ -122,6 +127,7 @@ abstract class BaseScraper
             $monitoring->markAsBroken(0, $e->getMessage());
 
             Log::channel('legal-documents-errors')->error("Exception scraping {$url}: {$e->getMessage()}");
+
             return null;
         }
     }
@@ -131,17 +137,17 @@ abstract class BaseScraper
      */
     protected function parseHtml(string $html): ?DOMDocument
     {
-        $dom = new DOMDocument();
-        
+        $dom = new DOMDocument;
+
         // Suppress warnings for malformed HTML
         libxml_use_internal_errors(true);
-        
+
         // Load HTML with UTF-8 encoding
         $dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
-        
+
         // Clear libxml errors
         libxml_clear_errors();
-        
+
         return $dom;
     }
 
@@ -158,10 +164,10 @@ abstract class BaseScraper
      */
     protected function extractText($element): string
     {
-        if (!$element) {
+        if (! $element) {
             return '';
         }
-        
+
         return trim($element->textContent ?? '');
     }
 
@@ -170,17 +176,17 @@ abstract class BaseScraper
      */
     protected function extractHref($element, string $baseUrl = ''): string
     {
-        if (!$element) {
+        if (! $element) {
             return '';
         }
-        
+
         $href = $element->getAttribute('href');
-        
+
         // Convert relative URLs to absolute
-        if ($href && !filter_var($href, FILTER_VALIDATE_URL)) {
-            $href = rtrim($baseUrl ?: $this->source->base_url, '/') . '/' . ltrim($href, '/');
+        if ($href && ! filter_var($href, FILTER_VALIDATE_URL)) {
+            $href = rtrim($baseUrl ?: $this->source->base_url, '/').'/'.ltrim($href, '/');
         }
-        
+
         return $href;
     }
 
@@ -192,8 +198,8 @@ abstract class BaseScraper
         try {
             // Generate checksum for duplicate detection
             $checksum = md5(
-                ($documentData['title'] ?? '') . 
-                ($documentData['document_number'] ?? '') . 
+                ($documentData['title'] ?? '').
+                ($documentData['document_number'] ?? '').
                 ($documentData['issue_year'] ?? '')
             );
 
@@ -201,6 +207,7 @@ abstract class BaseScraper
             $existing = LegalDocument::where('checksum', $checksum)->first();
             if ($existing) {
                 Log::channel('legal-documents')->info("Duplicate document skipped: {$documentData['title']}");
+
                 return $existing;
             }
 
@@ -224,10 +231,12 @@ abstract class BaseScraper
             ]);
 
             Log::channel('legal-documents')->info("Document saved: {$document->title}");
+
             return $document;
 
         } catch (\Exception $e) {
             Log::channel('legal-documents-errors')->error("Failed to save document: {$e->getMessage()}", $documentData);
+
             return null;
         }
     }
@@ -255,7 +264,7 @@ abstract class BaseScraper
     {
         $this->requestDelay = $this->source->getConfig('request_delay', 2);
         $this->timeout = $this->source->getConfig('timeout', 30);
-        
+
         $customHeaders = $this->source->getConfig('headers', []);
         $this->headers = array_merge($this->headers, $customHeaders);
     }
@@ -277,14 +286,12 @@ abstract class BaseScraper
     {
         // Remove extra whitespace
         $text = preg_replace('/\s+/', ' ', $text);
-        
+
         // Remove common noise words/characters
         $text = str_replace(['&nbsp;', '\r\n', '\n', '\r'], ' ', $text);
-        
+
         return trim($text);
     }
-
-    
 
     /**
      * Parse Indonesian date formats.
@@ -301,7 +308,7 @@ abstract class BaseScraper
         $monthMap = [
             'Januari' => '01', 'Februari' => '02', 'Maret' => '03', 'April' => '04',
             'Mei' => '05', 'Juni' => '06', 'Juli' => '07', 'Agustus' => '08',
-            'September' => '09', 'Oktober' => '10', 'November' => '11', 'Desember' => '12'
+            'September' => '09', 'Oktober' => '10', 'November' => '11', 'Desember' => '12',
         ];
 
         foreach ($patterns as $pattern) {
@@ -311,6 +318,7 @@ abstract class BaseScraper
                     if (isset($monthMap[$matches[2]])) {
                         return sprintf('%04d-%02d-%02d', $matches[3], $monthMap[$matches[2]], $matches[1]);
                     }
+
                     // Numeric formats
                     return sprintf('%04d-%02d-%02d', $matches[3], $matches[2], $matches[1]);
                 }

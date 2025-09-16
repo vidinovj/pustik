@@ -1,10 +1,11 @@
 <?php
+
 // Create: php artisan make:seeder PusdatinDocumentSourceSeeder
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\DocumentSource;
+use Illuminate\Database\Seeder;
 
 class PusdatinDocumentSourceSeeder extends Seeder
 {
@@ -23,19 +24,19 @@ class PusdatinDocumentSourceSeeder extends Seeder
                     'max_size_mb' => 10,
                     'document_categories' => [
                         'Nota Kesepahaman - MOU',
-                        'Nota Kesepahaman - PKS', 
+                        'Nota Kesepahaman - PKS',
                         'Dokumen Lainnya',
                         'MoU',
                         'PKS',
                         'Agreement',
                         'Surat Edaran',
                         'Pedoman',
-                        'SOP'
-                    ]
+                        'SOP',
+                    ],
                 ],
                 'is_active' => true,
                 'description' => 'Internal documents uploaded by Pusdatin staff including MoU, PKS, and other cooperation documents',
-                'total_documents' => 0
+                'total_documents' => 0,
             ]
         );
 
@@ -43,7 +44,7 @@ class PusdatinDocumentSourceSeeder extends Seeder
         DocumentSource::updateOrCreate(
             ['name' => 'MoU dan PKS Pusdatin'],
             [
-                'type' => 'manual', 
+                'type' => 'manual',
                 'base_url' => null,
                 'config' => [
                     'category' => 'cooperation_agreements',
@@ -52,7 +53,7 @@ class PusdatinDocumentSourceSeeder extends Seeder
                 ],
                 'is_active' => true,
                 'description' => 'Memorandum of Understanding dan Perjanjian Kerja Sama yang dikelola Pusdatin',
-                'total_documents' => 0
+                'total_documents' => 0,
             ]
         );
     }

@@ -28,7 +28,7 @@ class LegalDocument extends Model
         'is_tik_related',
         'document_type_code',
         'file_path',
-        'file_name', 
+        'file_name',
         'file_type',
         'file_size',
         'uploaded_by',
@@ -69,7 +69,7 @@ class LegalDocument extends Model
      */
     public function generateChecksum(): string
     {
-        return md5($this->title . $this->document_number . $this->issue_year);
+        return md5($this->title.$this->document_number.$this->issue_year);
     }
 
     /**
@@ -113,24 +113,26 @@ class LegalDocument extends Model
      */
     public function hasFile(): bool
     {
-        return !empty($this->file_path) && \Illuminate\Support\Facades\Storage::disk('local')->exists($this->file_path);
+        return ! empty($this->file_path) && \Illuminate\Support\Facades\Storage::disk('local')->exists($this->file_path);
     }
-    
+
     /**
      * Get formatted file size
      */
     public function getFormattedFileSizeAttribute(): string
     {
-        if (!$this->file_size) return '';
-        
+        if (! $this->file_size) {
+            return '';
+        }
+
         $bytes = $this->file_size;
         $units = ['B', 'KB', 'MB', 'GB'];
-        
+
         for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
-        
-        return round($bytes, 2) . ' ' . $units[$i];
+
+        return round($bytes, 2).' '.$units[$i];
     }
 
     /**

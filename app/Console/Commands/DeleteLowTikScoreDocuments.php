@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\LegalDocument;
+use Illuminate\Console\Command;
 
 class DeleteLowTikScoreDocuments extends Command
 {
@@ -45,6 +45,7 @@ class DeleteLowTikScoreDocuments extends Command
 
         if ($count === 0) {
             $this->info('✅ No documents with low TIK scores found.');
+
             return 0;
         }
 
@@ -52,7 +53,7 @@ class DeleteLowTikScoreDocuments extends Command
 
         foreach ($documentsToDelete as $document) {
             $this->line("  - Deleting: {$document->title} (Score: {$document->tik_relevance_score})");
-            if (!$isDryRun) {
+            if (! $isDryRun) {
                 $document->delete();
             }
         }

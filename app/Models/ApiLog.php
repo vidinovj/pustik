@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ApiLog extends Model
 {
     use HasUuids;
+
     protected $fillable = [
         'document_source_id',
         'endpoint',

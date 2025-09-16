@@ -1,7 +1,8 @@
 <?php
 
-if (!function_exists('format_bytes')) {
-    function format_bytes($bytes, $precision = 2) {
+if (! function_exists('format_bytes')) {
+    function format_bytes($bytes, $precision = 2)
+    {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
 
         $bytes = max($bytes, 0);
@@ -10,6 +11,6 @@ if (!function_exists('format_bytes')) {
 
         $bytes /= (1 << (10 * $pow));
 
-        return round($bytes, $precision) . ' ' . $units[$pow];
+        return round($bytes, $precision).' '.$units[$pow];
     }
 }

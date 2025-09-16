@@ -1,72 +1,60 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-6">Legal Document Details</h1>
-
-    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
-        <div class="mb-4">
-            <p class="text-gray-700 text-sm font-bold">Title:</p>
-            <p class="text-gray-900 text-lg">{{ $document->title }}</p>
-        </div>
-
-        <div class="mb-4">
-            <p class="text-gray-700 text-sm font-bold">Document Type:</p>
-            <p class="text-gray-900">{{ $document->document_type }}</p>
-        </div>
-
-        <div class="mb-4">
-            <p class="text-gray-700 text-sm font-bold">Document Number:</p>
-            <p class="text-gray-900">{{ $document->document_number ?? 'N/A' }}</p>
-        </div>
-
-        <div class="mb-4">
-            <p class="text-gray-700 text-sm font-bold">Issue Year:</p>
-            <p class="text-gray-900">{{ $document->issue_year ?? 'N/A' }}</p>
-        </div>
-
-        <div class="mb-4">
-            <p class="text-gray-700 text-sm font-bold">Source URL:</p>
-            <p class="text-gray-900"><a href="{{ $document->source_url }}" target="_blank" class="text-blue-500 hover:underline">{{ $document->source_url ?? 'N/A' }}</a></p>
-        </div>
-
-        <div class="mb-4">
-            <p class="text-gray-700 text-sm font-bold">Status:</p>
-            <p class="text-gray-900">{{ ucfirst($document->status) }}</p>
-        </div>
-
-        <div class="mb-4">
-            <p class="text-gray-700 text-sm font-bold">Full Text:</p>
-            <div class="bg-gray-100 p-4 rounded-md max-h-64 overflow-y-auto">
-                <p class="text-gray-800 whitespace-pre-wrap">{{ $document->full_text ?? 'N/A' }}</p>
-            </div>
-        </div>
-
-        <div class="mb-4">
-            <p class="text-gray-700 text-sm font-bold">Metadata:</p>
-            <div class="bg-gray-100 p-4 rounded-md max-h-64 overflow-y-auto">
-                <pre class="text-gray-800 text-sm">{{ json_encode($document->metadata, JSON_PRETTY_PRINT) }}</pre>
-            </div>
-        </div>
-
-        <div class="flex justify-end mt-6">
-            <a href="{{ route('admin.legal-documents.edit', $document) }}" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded mr-2">
-                Edit
-            </a>
-            <form action="{{ route('admin.legal-documents.destroy', $document) }}" method="POST" class="inline-block">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onclick="return confirm('Are you sure you want to delete this document?');">
-                    Delete
-                </button>
-            </form>
+<div class="container-fluid px-4 py-3">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="text-white">Detail Dokumen</h1>
         </div>
     </div>
 
-    <div class="flex justify-start">
-        <a href="{{ route('admin.legal-documents.index') }}" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
-            Back to List
-        </a>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">{{ $document->title }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Tipe Dokumen:</strong> {{ $document->document_type }}</p>
+                    <p><strong>Nomor Dokumen:</strong> {{ $document->document_number ?? 'N/A' }}</p>
+                    <p><strong>Tahun Terbit:</strong> {{ $document->issue_year ?? 'N/A' }}</p>
+                    <p><strong>Status:</strong> {{ ucfirst($document->status) }}</p>
+                    <p><strong>URL Sumber:</strong> <a href="{{ $document->source_url }}" target="_blank">{{ $document->source_url ?? 'N/A' }}</a></p>
+                </div>
+                <div class="col-md-6">
+                    @if($document->file_path)
+                        <p><strong>Nama Berkas:</strong> {{ $document->file_name }}</p>
+                        <p><strong>Ukuran Berkas:</strong> {{ format_bytes($document->file_size) }}</p>
+                        <a href="{{ Storage::url($document->file_path) }}" target="_blank" class="btn btn-primary">Lihat Berkas</a>
+                    @else
+                        <p><strong>Berkas:</strong> Tidak ada berkas yang diunggah.</p>
+                    @endif
+                </div>
+            </div>
+
+            <hr>
+
+            <h5>Ringkasan/Catatan Dokumen:</h5>
+            <div class="p-3 bg-light rounded">
+                <p>{{ $document->full_text ?? 'N/A' }}</p>
+            </div>
+
+            <hr>
+
+            <h5>Metadata:</h5>
+            <div class="p-3 bg-light rounded">
+                <pre>{{ json_encode($document->metadata, JSON_PRETTY_PRINT) }}</pre>
+            </div>
+        </div>
+        <div class="card-footer text-end">
+            <a href="{{ route('admin.legal-documents.edit', $document) }}" class="btn btn-warning">Ubah</a>
+            <form action="{{ route('admin.legal-documents.destroy', $document) }}" method="POST" class="d-inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus dokumen ini?');">Hapus</button>
+            </form>
+            <a href="{{ route('admin.legal-documents.index') }}" class="btn btn-secondary">Kembali ke Daftar</a>
+        </div>
     </div>
 </div>
 @endsection

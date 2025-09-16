@@ -67,14 +67,14 @@ return [
         'read_timeout' => env('LEGAL_DOCS_READ_TIMEOUT', 45),
         'follow_redirects' => env('LEGAL_DOCS_FOLLOW_REDIRECTS', true),
         'max_redirects' => env('LEGAL_DOCS_MAX_REDIRECTS', 10),
-        
+
         // Enhanced browser simulation
         'browser_simulation' => [
             'enabled' => env('LEGAL_DOCS_BROWSER_SIMULATION', true),
             'session_persistence' => env('LEGAL_DOCS_SESSION_PERSISTENCE', true),
             'javascript_delay' => env('LEGAL_DOCS_JS_DELAY', 2), // seconds to wait for JS
         ],
-        
+
         // Anti-detection measures
         'anti_detection' => [
             'random_delays' => env('LEGAL_DOCS_RANDOM_DELAYS', true),

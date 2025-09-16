@@ -1,11 +1,11 @@
 <?php
+
 // app/Services/Scrapers/ScraperFactory.php
 
 namespace App\Services\Scrapers;
 
 use App\Models\DocumentSource;
 use Illuminate\Support\Facades\Log;
-use App\Services\Scrapers\Enhanced\KemluTikScraper;
 
 class ScraperFactory
 {
@@ -23,16 +23,18 @@ class ScraperFactory
     public static function create(DocumentSource $source): ?BaseScraper
     {
         $sourceType = $source->name;
-        
-        if (!isset(static::$scrapers[$sourceType])) {
+
+        if (! isset(static::$scrapers[$sourceType])) {
             Log::channel('legal-documents-errors')->error("No scraper found for source: {$sourceType}");
+
             return null;
         }
 
         $scraperClass = static::$scrapers[$sourceType];
-        
-        if (!class_exists($scraperClass)) {
+
+        if (! class_exists($scraperClass)) {
             Log::channel('legal-documents-errors')->error("Scraper class not found: {$scraperClass}");
+
             return null;
         }
 
@@ -40,6 +42,7 @@ class ScraperFactory
             return new $scraperClass($source);
         } catch (\Exception $e) {
             Log::channel('legal-documents-errors')->error("Failed to create scraper for {$sourceType}: {$e->getMessage()}");
+
             return null;
         }
     }
@@ -50,8 +53,8 @@ class ScraperFactory
     public static function createFromUrl(string $url): ?BaseScraper
     {
         $sourceType = static::detectSourceTypeFromUrl($url);
-        
-        if (!$sourceType) {
+
+        if (! $sourceType) {
             return null;
         }
 
@@ -59,7 +62,7 @@ class ScraperFactory
         $tempSource = new DocumentSource([
             'name' => $sourceType,
             'base_url' => $url,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         return static::create($tempSource);
@@ -96,8 +99,8 @@ class ScraperFactory
      */
     public static function register(string $sourceType, string $scraperClass): void
     {
-        if (!is_subclass_of($scraperClass, BaseScraper::class)) {
-            throw new \InvalidArgumentException("Scraper class must extend BaseScraper");
+        if (! is_subclass_of($scraperClass, BaseScraper::class)) {
+            throw new \InvalidArgumentException('Scraper class must extend BaseScraper');
         }
 
         static::$scrapers[$sourceType] = $scraperClass;
@@ -146,13 +149,13 @@ class ScraperFactory
                     $tempSource = new DocumentSource([
                         'name' => $type,
                         'base_url' => $url,
-                        'status' => 'active'
+                        'status' => 'active',
                     ]);
 
                     $scraper = static::create($tempSource);
                     $results[$type] = $scraper ? 'available' : 'failed';
                 } catch (\Exception $e) {
-                    $results[$type] = 'error: ' . $e->getMessage();
+                    $results[$type] = 'error: '.$e->getMessage();
                 }
             }
         }
