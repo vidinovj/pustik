@@ -5,6 +5,7 @@
 
 namespace App\Services\Scrapers;
 
+use App\Jobs\ScrapeDocuments;
 use App\Models\DocumentSource;
 use App\Services\DocumentClassifierService;
 use App\Services\TikTermsService;
@@ -20,6 +21,13 @@ class BpkScraper extends BaseScraper
     protected ?int $limit = null; // Added property
 
     protected bool $dryRun = false; // Added property
+
+    /**
+     * The job instance.
+     *
+     * @var \App\Jobs\ScrapeDocuments|null
+     */
+    protected $job;
 
     // TIK-focused search queries for BPK
     private array $searchQueries = [
@@ -104,6 +112,17 @@ class BpkScraper extends BaseScraper
         $this->dryRun = $dryRun;
     }
 
+    /**
+     * Set the job instance.
+     *
+     * @param \App\Jobs\ScrapeDocuments $job
+     * @return void
+     */
+    public function setJob(ScrapeDocuments $job): void
+    {
+        $this->job = $job;
+    }
+
     public function scrape(): array
     {
         Log::channel('legal-documents')->info('BpkScraper: Starting enhanced BPK scraping with advanced entity search');
@@ -125,8 +144,14 @@ class BpkScraper extends BaseScraper
 
             $documentCount = 0;
             $totalProcessed = 0;
+            $totalUrls = count($documentUrls);
 
             foreach ($documentUrls as $index => $url) {
+                if ($this->job) {
+                    $progress = ($index + 1) / $totalUrls * 100;
+                    $this->job->updateProgress((int) $progress);
+                }
+
                 Log::channel('legal-documents')->info("BPK Processing URL {$index}: {$url}");
 
                 $strategies = [$bestStrategy];

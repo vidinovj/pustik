@@ -9,6 +9,8 @@
         </div>
     @endif
 
+    <div id="job-status-container"></div>
+
     @php
     $filters = [
         ['name' => 'title', 'label' => 'Perihal', 'type' => 'text', 'placeholder' => 'Saring berdasarkan perihal', 'width' => 3],
@@ -22,8 +24,20 @@
 
     <div class="row mb-3">
         <div class="col-md-12 text-end">
+            <form action="{{ route('admin.jobs.scrape') }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-info">
+                    <i class="fas fa-cloud-download-alt"></i> Scrape Documents
+                </button>
+            </form>
+            <form action="{{ route('admin.jobs.normalize') }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-cogs"></i> Normalize Documents
+                </button>
+            </form>
             <a href="{{ route('admin.legal-documents.create') }}" class="btn btn-primary">
-                Tambah Dokumen Baru
+                <i class="fas fa-plus"></i> Tambah Dokumen Baru
             </a>
         </div>
     </div>
@@ -111,4 +125,52 @@
         {{ $legal_documents->links('pagination.bootstrap') }}
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const jobStatusContainer = document.getElementById('job-status-container');
+
+        function fetchJobStatus() {
+            fetch('{{ route('admin.jobs.status') }}')
+                .then(response => response.json())
+                .then(jobs => {
+                    jobStatusContainer.innerHTML = '';
+                    if (jobs.length > 0) {
+                        let html = '<div class="card mb-4"><div class="card-header">Job Status</div><div class="card-body">';
+                        jobs.forEach(job => {
+                            let statusClass = '';
+                            switch (job.status) {
+                                case 'completed':
+                                    statusClass = 'bg-success';
+                                    break;
+                                case 'failed':
+                                    statusClass = 'bg-danger';
+                                    break;
+                                case 'running':
+                                    statusClass = 'bg-info';
+                                    break;
+                                default:
+                                    statusClass = 'bg-secondary';
+                            }
+                            html += `
+                                <div class="mb-3">
+                                    <h6>${job.name} <span class="badge ${statusClass}">${job.status}</span></h6>
+                                    <div class="progress">
+                                        <div class="progress-bar ${statusClass}" role="progressbar" style="width: ${job.progress}%" aria-valuenow="${job.progress}" aria-valuemin="0" aria-valuemax="100">${job.progress}%</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '</div></div>';
+                        jobStatusContainer.innerHTML = html;
+                    }
+                });
+        }
+
+        setInterval(fetchJobStatus, 5000);
+        fetchJobStatus();
+    });
+</script>
+@endpush
 @endsection

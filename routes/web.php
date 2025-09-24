@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\JobController;
+use App\Http\Controllers\Admin\JobStatusController;
 use App\Http\Controllers\Admin\LegalDocumentController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FilterKebijakanEksternalController;
@@ -33,6 +35,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // CRUD Legal Documents
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('legal-documents', LegalDocumentController::class);
+
+        // Job routes for scraping and normalization
+        Route::post('/jobs/scrape', [JobController::class, 'scrape'])->name('jobs.scrape');
+        Route::post('/jobs/normalize', [JobController::class, 'normalize'])->name('jobs.normalize');
+
+        // Job status route
+        Route::get('/jobs/status', [JobStatusController::class, 'index'])->name('jobs.status');
     });
 });
 
